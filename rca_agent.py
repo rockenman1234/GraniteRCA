@@ -7,10 +7,10 @@ the root cause, provide a summary, and suggest a fix.
 Original Author: Kenneth (Alex) Jenkins - https://alexj.io
 """
 
-import argparse
 import asyncio
 import os
 import re
+import sys
 from beeai_framework.backend.chat import ChatModel
 from beeai_framework.backend.message import UserMessage, AssistantMessage
 
@@ -33,7 +33,7 @@ Here is an excerpt from the service log:
 
 {log_lines}
 
-Please identify the likely root cause and suggest a debugging strategy. Structure your response with clear sections:
+Identify the likely root cause and suggest a debugging strategy. Structure your response with clear sections:
 - Root Cause
 - Evidence
 - Suggested Fix
@@ -88,15 +88,19 @@ async def perform_rca(error_desc, logfile_path):
 
 def parse_args():
     """
-    Parses command-line arguments for the RCA agent.
+    Parses command-line arguments manually for the RCA agent.
     
     This function is part of the agent's mechanism to engage with the user through a command-line interface,
     allowing the user to report a problem and specify the log file for analysis.
     """
-    parser = argparse.ArgumentParser(description="Root Cause Analysis using Granite via BeeAI")
-    parser.add_argument('--error', type=str, required=True, help='The user-facing error message')
-    parser.add_argument('--logfile', type=str, required=True, help='Path to the service log file')
-    return parser.parse_args()
+    if len(sys.argv) != 5 or sys.argv[1] != '--error' or sys.argv[3] != '--logfile':
+        print("Usage: python rca_agent.py --error 'error message' --logfile path/to/logfile")
+        sys.exit(1)
+    
+    return {
+        'error': sys.argv[2],
+        'logfile': sys.argv[4]
+    }
 
 def main():
     """
@@ -111,7 +115,7 @@ def main():
     """
     args = parse_args()
     try:
-        analysis = asyncio.run(perform_rca(args.error, args.logfile))
+        analysis = asyncio.run(perform_rca(args['error'], args['logfile']))
         print("=== IBM Granite Root Cause Analysis Report ===")
         if isinstance(analysis, str):
             # Bold any text enclosed in double asterisks
