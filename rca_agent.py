@@ -94,7 +94,7 @@ def parse_args():
     allowing the user to report a problem and specify the log file for analysis.
     """
     if len(sys.argv) != 5 or sys.argv[1] != '--error' or sys.argv[3] != '--logfile':
-        print("Usage: python rca_agent.py --error 'error message' --logfile path/to/logfile")
+        print("Usage: python rca_agent.py --error 'A short description of your error message' --logfile path/to/your/logfile")
         sys.exit(1)
     
     return {
