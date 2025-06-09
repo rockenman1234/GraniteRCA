@@ -1,134 +1,173 @@
 """
-RCA Agent using BeeAI with IBM Granite via Ollama.
+Enhanced System Diagnostic RCA Agent
 
-This script analyzes an error message and associated log file to determine
-the root cause, provide a summary, and suggest a fix.
+This is the main entry point for the RCA system, providing a command-line interface
+for users to perform root cause analysis on system errors. It handles argument parsing,
+user interaction, and coordinates the core RCA functionality.
 
-Original Author: Kenneth (Alex) Jenkins - https://alexj.io
+Copyright (C) 2024 Kenneth (Alex) Jenkins
+
+This program is free software; you can redistribute it and/or
+modify it under the terms of the GNU General Public License
+as published by the Free Software Foundation; either version 2
+of the License, or (at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program; if not, see <https://www.gnu.org/licenses/>.
 """
 
-import asyncio
-import os
-import re
 import sys
-from beeai_framework.backend.chat import ChatModel
-from beeai_framework.backend.message import UserMessage, AssistantMessage
+import asyncio
+from datetime import datetime
+from rca_core import perform_enhanced_rca
+from rca_utils import format_output
 
-def build_prompt(error_desc, log_lines):
+def show_license():
+    """Display the license information."""
+    print("""
+GraniteRCA Agent, Copyright (C) 2025-present Kenneth (Alex) Jenkins, & contributors.
+
+This program comes with ABSOLUTELY NO WARRANTY.
+This is libre/free software, and you are welcome to redistribute it under certain conditions;
+type '--license' for details.
+
+A copy of this license should have been provided with this software, if not - visit:
+https://www.gnu.org/licenses/old-licenses/gpl-2.0.html
+""")
+
+def parse_enhanced_args():
     """
-    Constructs a prompt for the LLM to perform Root Cause Analysis (RCA).
-    
-    The prompt includes:
-    - A description of the error reported by the user.
-    - An excerpt from the service log to provide context.
-    
-    This function is part of the agent's information sourcing mechanism, where basic context is provided to the LLM.
+    Enhanced argument parsing supporting multiple operation modes.
     """
-    return f"""You are an expert in debugging distributed web systems.
-
-The user is reporting the following error:
-"{error_desc}"
-
-Here is an excerpt from the service log:
-
-{log_lines}
-
-Identify the likely root cause and suggest a debugging strategy. Structure your response with clear sections:
-- Root Cause
-- Evidence
-- Suggested Fix
-- Further Questions
-"""
-
-async def perform_rca(error_desc, logfile_path):
-    """
-    Performs Root Cause Analysis (RCA) based on the provided error description and log file.
-    
-    This function is responsible for:
-    - Reading the log file to gather context.
-    - Constructing a prompt for the LLM.
-    - Sending the prompt to the LLM and extracting the response.
-    
-    The agent sources information by reading a static log file, which is a basic approach to information gathering.
-    """
-    # Read and preprocess logs
-    if not os.path.exists(logfile_path):
-        raise FileNotFoundError(f"Log file not found: {logfile_path}")
-
-    with open(logfile_path, 'r') as f:
-        log_lines = f.read()
-
-    # Build the prompt for the model
-    prompt = build_prompt(error_desc, log_lines)
-
-    # Initialize the Granite model via BeeAI
-    model = ChatModel.from_name("ollama:granite3.3:8b-beeai")
-
-    # Construct UserMessage properly
-    user_msg = UserMessage(prompt)
-
-    try:
-        response = await model.create(messages=[user_msg])
-        # Extract only the text content from the response
-        if isinstance(response, list) and len(response) > 0:
-            if hasattr(response[0], "text"):
-                return response[0].text
-            return str(response[0])
-        elif hasattr(response, "messages"):
-            messages = response.messages
-            if isinstance(messages, list) and len(messages) > 0 and hasattr(messages[0], "text"):
-                return messages[0].text
-            return str(messages)
-        elif hasattr(response, "text"):
-            return response.text
-        else:
-            return str(response)
-    except Exception as e:
-        raise Exception(f"Failed to get response from model: {e}")
-
-def parse_args():
-    """
-    Parses command-line arguments manually for the RCA agent.
-    
-    This function is part of the agent's mechanism to engage with the user through a command-line interface,
-    allowing the user to report a problem and specify the log file for analysis.
-    """
-    if len(sys.argv) != 5 or sys.argv[1] != '--error' or sys.argv[3] != '--logfile':
-        print("Usage: python rca_agent.py --error 'A short description of your error message' --logfile path/to/your/logfile")
+    if len(sys.argv) < 2:
+        print_usage()
         sys.exit(1)
     
-    return {
-        'error': sys.argv[2],
-        'logfile': sys.argv[4]
+    # Check for license flag first
+    if sys.argv[1] in ['--license', '-l']:
+        show_license()
+        sys.exit(0)
+    
+    args = {
+        'error': '',
+        'logfile': None,
+        'scan_system': False,
+        'hours_back': 24,
+        'mode': 'basic'
     }
+    
+    i = 1
+    while i < len(sys.argv):
+        if sys.argv[i] == '--error' and i + 1 < len(sys.argv):
+            args['error'] = sys.argv[i + 1]
+            i += 2
+        elif sys.argv[i] == '--logfile' and i + 1 < len(sys.argv):
+            args['logfile'] = sys.argv[i + 1]
+            i += 2
+        elif sys.argv[i] == '--scan-system':
+            args['scan_system'] = True
+            args['mode'] = 'system_scan'
+            i += 1
+        elif sys.argv[i] == '--hours' and i + 1 < len(sys.argv):
+            args['hours_back'] = int(sys.argv[i + 1])
+            i += 2
+        elif sys.argv[i] in ['--help', '-h']:
+            print_usage()
+            sys.exit(0)
+        elif sys.argv[i] in ['--license', '-l']:
+            show_license()
+            sys.exit(0)
+        else:
+            print(f"Unknown argument: {sys.argv[i]}")
+            print_usage()
+            sys.exit(1)
+    
+    if not args['error']:
+        print("Error: --error description is required")
+        print_usage()
+        sys.exit(1)
+    
+    return args
+
+def print_usage():
+    """Print comprehensive usage information."""
+    print("""
+Enhanced System Diagnostic RCA Agent
+
+USAGE MODES:
+
+1. Basic Mode (original functionality):
+   python rca_agent.py --error "Error description" --logfile path/to/logfile
+
+2. System Scan Mode (automatic log scanning):
+   python rca_agent.py --error "Error description" --scan-system [--hours 24]
+
+3. Quick Analysis Mode (error description only):
+   python rca_agent.py --error "Error description"
+
+OPTIONS:
+  --error TEXT        Description of the error (required)
+  --logfile PATH      Path to specific log file to analyze
+  --scan-system       Automatically scan system logs for recent errors
+  --hours N           Hours back to scan for errors (default: 24)
+  --help, -h          Show this help message
+  --license, -l       Show license information
+
+SUPPORTED ERROR TYPES:
+  - Linux kernel errors and panics
+  - SELinux policy violations
+  - Java/JVM exceptions and errors
+  - systemd service failures
+  - Network connectivity issues
+  - Boot and initialization problems
+  - Application-level errors
+  - Hardware-related issues
+""")
 
 def main():
     """
-    Main function to run the RCA agent.
-    
-    This function:
-    - Parses command-line arguments.
-    - Calls the perform_rca function to conduct the analysis.
-    - Prints the analysis report with proper formatting, supporting markdown text formatting for TUI output.
-    
-    The agent's action when a problem is identified is to inform the user and suggest a fix, as part of the RCA process.
+    Enhanced main function supporting multiple diagnostic modes.
     """
-    args = parse_args()
     try:
-        analysis = asyncio.run(perform_rca(args['error'], args['logfile']))
-        print("=== IBM Granite Root Cause Analysis Report ===")
-        if isinstance(analysis, str):
-            # Bold any text enclosed in double asterisks
-            bolded = re.sub(r'\*\*(.*?)\*\*', r'\033[1m\1\033[0m', analysis)
-            # Underline and bold any line that starts with '##'
-            underlined = re.sub(r'^##\s*(.*?)$', r'\033[1;4m\1\033[0m', bolded, flags=re.MULTILINE)
-            # Split on '\n' and print each line for correct newlines
-            for line in underlined.split('\\n'):
-                print(line)
-        else:
-            print(analysis)
+        args = parse_enhanced_args()
+        
+        print("=== Enhanced System Diagnostic RCA Report ===")
+        print(f"Mode: {args['mode'].upper()}")
+        print(f"Timestamp: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+        print("=" * 50)
+        
+        analysis = asyncio.run(perform_enhanced_rca(
+            args['error'], 
+            args['logfile'], 
+            args['scan_system'], 
+            args['hours_back']
+        ))
+        
+        formatted_analysis = format_output(analysis)
+        print(formatted_analysis)
+        
+        print("\n" + "=" * 50)
+        print("Analysis complete. For persistent issues, consider:")
+        print("- Running with --scan-system to check broader system logs")
+        print("- Increasing --hours value to scan further back in time")
+        print("- Checking specific service logs in /var/log/")
+        print("- Reviewing security logs if SELinux or permission issues persist")
+        
+    except KeyboardInterrupt:
+        print("\n\nAnalysis interrupted by user.")
+        sys.exit(1)
     except Exception as e:
-        print(f"An error occurred: {e}")
+        print(f"An error occurred during analysis: {e}")
+        print("\nFor troubleshooting:")
+        print("1. Verify log file permissions and paths")
+        print("2. Check if BeeAI framework and Ollama are properly configured")
+        print("3. Ensure granite3.3:8b-beeai model is available")
+        sys.exit(1)
 
 if __name__ == '__main__':
     main()

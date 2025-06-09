@@ -1,1 +1,8 @@
-beeai-framework
+# Core dependencies
+beeai-framework>=1.0.0  # Framework for AI model interaction
+tqdm>=4.65.0           # Progress bar functionality
+
+# System dependencies (must be installed separately)
+# - Python 3.8 or higher
+# - Ollama with granite3.3:8b-beeai model
+# - System access to /var/log and other system directories
