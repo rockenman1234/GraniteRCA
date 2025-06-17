@@ -10,10 +10,13 @@ import os
 import re
 import subprocess
 import glob
+import json
 from datetime import datetime, timedelta
 from tqdm import tqdm
 from beeai_framework.backend.chat import ChatModel
 from beeai_framework.backend.message import UserMessage, AssistantMessage
+from container_monitor import ContainerMonitor
+from resource_monitor import ResourceMonitor
 
 class SystemErrorTypes:
     """Classification of different system error types for specialized analysis."""
@@ -27,6 +30,16 @@ class SystemErrorTypes:
     BOOT = "boot"
     HARDWARE = "hardware"
     SECURITY = "security"
+    CONTAINER = "container"
+
+class ImpactLevel:
+    """Impact severity levels for context-aware scoring."""
+    
+    CRITICAL = "critical"  # System-wide outage, data loss risk
+    HIGH = "high"         # Major service disruption
+    MEDIUM = "medium"     # Partial service degradation
+    LOW = "low"          # Minor issues, non-critical services
+    INFO = "info"        # Informational, no impact
 
 class SystemLogScanner:
     """Scans various system logs and identifies error patterns."""
@@ -80,6 +93,42 @@ class SystemLogScanner:
                 r'boot.*error|failed',
                 r'initramfs.*error',
                 r'grub.*error'
+            ],
+            SystemErrorTypes.CONTAINER: [
+                r'container.*failed|error|crash',
+                r'pod.*failed|error|crash',
+                r'docker.*error|failed',
+                r'podman.*error|failed'
+            ]
+        }
+        
+        self.impact_indicators = {
+            ImpactLevel.CRITICAL: [
+                r'panic|fatal|crash|segfault',
+                r'data.*loss|corrupt',
+                r'system.*halt|shutdown',
+                r'kernel.*panic',
+                r'out of memory',
+                r'disk.*full'
+            ],
+            ImpactLevel.HIGH: [
+                r'failed to start',
+                r'service.*down',
+                r'connection.*refused',
+                r'authentication.*failed',
+                r'permission.*denied'
+            ],
+            ImpactLevel.MEDIUM: [
+                r'warning',
+                r'degraded',
+                r'slow',
+                r'timeout',
+                r'retry'
+            ],
+            ImpactLevel.LOW: [
+                r'notice',
+                r'info',
+                r'debug'
             ]
         }
     
@@ -150,8 +199,20 @@ class SystemLogScanner:
         if scores:
             return max(scores.items(), key=lambda x: x[1])[0]
         return SystemErrorTypes.APPLICATION
+        
+    def assess_impact(self, error_desc, log_content):
+        """Assess the impact level of an error based on its description and logs."""
+        combined_text = f"{error_desc} {log_content}".lower()
+        
+        # Check for impact indicators in order of severity
+        for level in [ImpactLevel.CRITICAL, ImpactLevel.HIGH, ImpactLevel.MEDIUM, ImpactLevel.LOW]:
+            for pattern in self.impact_indicators[level]:
+                if re.search(pattern, combined_text, re.IGNORECASE):
+                    return level
+                    
+        return ImpactLevel.INFO
 
-async def perform_enhanced_rca(error_desc, logfile_path=None, scan_system=False, hours_back=24):
+async def perform_enhanced_rca(error_desc, logfile_path=None, scan_system=False, hours_back=24, triage_mode=False):
     """
     Performs comprehensive Root Cause Analysis with system-wide scanning capabilities.
     
@@ -161,12 +222,17 @@ async def perform_enhanced_rca(error_desc, logfile_path=None, scan_system=False,
     3. System context gathering
     4. Progress indication during analysis
     5. Specialized analysis based on error type
+    6. Context-aware impact scoring
+    7. Triage mode for live outages
+    8. Container health monitoring
+    9. Resource monitoring and log bundling
     
     Args:
         error_desc (str): Description of the error to analyze
         logfile_path (str, optional): Path to specific log file for analysis
         scan_system (bool): Whether to perform system-wide log scanning
         hours_back (int): Number of hours to look back in logs when scanning
+        triage_mode (bool): Whether to run in triage mode for live outages
         
     Returns:
         str: Comprehensive analysis report with root cause and recommendations
@@ -180,6 +246,8 @@ async def perform_enhanced_rca(error_desc, logfile_path=None, scan_system=False,
     log_content = ""
     system_context = get_system_context()
     scanner = SystemLogScanner()
+    resource_monitor = ResourceMonitor()
+    container_monitor = ContainerMonitor()
     
     # Create progress bar for overall analysis
     with tqdm(total=100, desc="Performing RCA", bar_format='{l_bar}{bar}| {n_fmt}/{total_fmt}') as pbar:
@@ -214,8 +282,24 @@ async def perform_enhanced_rca(error_desc, logfile_path=None, scan_system=False,
         print(f"Error classified as: {error_type.upper()}")
         pbar.update(20)  # 20% more complete after classification
         
+        # Assess impact level
+        impact_level = scanner.assess_impact(error_desc, log_content)
+        print(f"Impact level: {impact_level.upper()}")
+        pbar.update(10)  # 10% more complete after impact assessment
+        
+        # Gather additional context based on error type and impact
+        additional_context = {}
+        
+        if error_type == SystemErrorTypes.CONTAINER:
+            additional_context["container_health"] = container_monitor.get_container_health()
+            
+        if impact_level in [ImpactLevel.CRITICAL, ImpactLevel.HIGH] or triage_mode:
+            additional_context["resource_usage"] = resource_monitor.get_top_info()
+            additional_context["cpu_info"] = resource_monitor.get_cpu_info()
+            
         # Build enhanced prompt
-        prompt = build_enhanced_prompt(error_desc, log_content, error_type, system_context)
+        prompt = build_enhanced_prompt(error_desc, log_content, error_type, system_context, 
+                                     impact_level, additional_context, triage_mode)
         pbar.update(10)  # 10% more complete after prompt building
         
         # Initialize the Granite model via BeeAI
@@ -231,16 +315,41 @@ async def perform_enhanced_rca(error_desc, logfile_path=None, scan_system=False,
             # Extract text content from response
             if isinstance(response, list) and len(response) > 0:
                 if hasattr(response[0], "text"):
-                    return response[0].text
-                return str(response[0])
+                    analysis = response[0].text
+                else:
+                    analysis = str(response[0])
             elif hasattr(response, "messages"):
                 messages = response.messages
                 if isinstance(messages, list) and len(messages) > 0 and hasattr(messages[0], "text"):
-                    return messages[0].text
-                return str(messages)
+                    analysis = messages[0].text
+                else:
+                    analysis = str(messages)
             elif hasattr(response, "text"):
-                return response.text
+                analysis = response.text
             else:
-                return str(response)
+                analysis = str(response)
+                
+            # Save report with lessons learned
+            report = {
+                "timestamp": datetime.now().isoformat(),
+                "error_description": error_desc,
+                "error_type": error_type,
+                "impact_level": impact_level,
+                "analysis": analysis,
+                "system_context": system_context,
+                "additional_context": additional_context,
+                "lessons_learned": {
+                    "root_cause": "To be filled after resolution",
+                    "preventive_measures": "To be filled after resolution",
+                    "improvement_areas": "To be filled after resolution"
+                }
+            }
+            
+            # Save report to temporary directory
+            report_path = resource_monitor.save_report(report)
+            print(f"\nReport saved to: {report_path}")
+            
+            return analysis
+            
         except Exception as e:
             raise Exception(f"Failed to get response from model: {e}") 

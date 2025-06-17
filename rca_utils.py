@@ -9,7 +9,7 @@ These functions are used by the core RCA functionality to enhance its capabiliti
 import re
 import subprocess
 from datetime import datetime
-from rca_core import SystemErrorTypes
+from rca_core import SystemErrorTypes, ImpactLevel
 
 def get_system_context():
     """Gather relevant system context information."""
@@ -50,7 +50,7 @@ def get_system_context():
     
     return "\n".join([f"{k}: {v}" for k, v in context.items()])
 
-def build_enhanced_prompt(error_desc, log_lines, error_type, system_context):
+def build_enhanced_prompt(error_desc, log_lines, error_type, system_context, impact_level, additional_context=None, triage_mode=False):
     """
     Constructs an enhanced prompt for comprehensive system diagnostics.
     """
@@ -87,14 +87,79 @@ Focus on system boot and initialization issues:
 - File system mount failures
 - Service startup dependencies
 - Hardware initialization problems
+""",
+        SystemErrorTypes.CONTAINER: """
+Focus on container-related issues:
+- Container runtime problems
+- Resource constraints and limits
+- Network connectivity issues
+- Volume mount problems
+- Container orchestration issues
+"""
+    }
+    
+    impact_guidance = {
+        ImpactLevel.CRITICAL: """
+CRITICAL IMPACT - System-wide outage or data loss risk:
+- Focus on immediate service restoration
+- Prioritize data integrity and recovery
+- Consider system-wide implications
+- Plan for failover if available
+""",
+        ImpactLevel.HIGH: """
+HIGH IMPACT - Major service disruption:
+- Focus on core service functionality
+- Check dependent services
+- Monitor resource usage
+- Consider service dependencies
+""",
+        ImpactLevel.MEDIUM: """
+MEDIUM IMPACT - Partial service degradation:
+- Focus on performance optimization
+- Check resource utilization
+- Monitor error rates
+- Consider scaling options
+""",
+        ImpactLevel.LOW: """
+LOW IMPACT - Minor issues:
+- Focus on service improvements
+- Check configuration settings
+- Monitor for escalation
+- Consider preventive measures
 """
     }
     
     guidance = type_specific_guidance.get(error_type, "Focus on application-level debugging strategies.")
+    impact = impact_guidance.get(impact_level, "Assess impact based on service criticality.")
+    
+    # Add triage mode guidance if enabled
+    triage_guidance = """
+TRIAGE MODE - Live outage in progress:
+- Focus on immediate service restoration
+- Prioritize critical systems
+- Gather essential diagnostics
+- Document actions taken
+- Plan for post-incident review
+""" if triage_mode else ""
+    
+    # Add container health info if available
+    container_info = ""
+    if additional_context and "container_health" in additional_context:
+        container_info = "\nCONTAINER HEALTH INFORMATION:\n" + str(additional_context["container_health"])
+    
+    # Add resource usage info if available
+    resource_info = ""
+    if additional_context and ("resource_usage" in additional_context or "cpu_info" in additional_context):
+        resource_info = "\nRESOURCE USAGE INFORMATION:\n"
+        if "resource_usage" in additional_context:
+            resource_info += str(additional_context["resource_usage"])
+        if "cpu_info" in additional_context:
+            resource_info += "\nCPU INFORMATION:\n" + str(additional_context["cpu_info"])
     
     return f"""You are an expert system administrator and diagnostic specialist with deep knowledge of Linux systems, security policies, application frameworks, and hardware troubleshooting.
 
 ERROR CLASSIFICATION: {error_type.upper()}
+IMPACT LEVEL: {impact_level.upper()}
 
 The user is reporting the following error:
 "{error_desc}"
@@ -105,8 +170,16 @@ SYSTEM CONTEXT:
 LOG ANALYSIS DATA:
 {log_lines}
 
+{container_info}
+{resource_info}
+
 SPECIALIZED GUIDANCE:
 {guidance}
+
+IMPACT ASSESSMENT:
+{impact}
+
+{triage_guidance}
 
 Provide a comprehensive diagnostic analysis with the following structure:
 
@@ -130,6 +203,9 @@ If the issue persists, provide additional diagnostic commands and investigation 
 
 ## Security Considerations
 Highlight any security implications and recommended security measures.
+
+## Lessons Learned
+Suggest improvements to prevent similar issues in the future.
 
 Be specific with command examples, file paths, and configuration snippets where applicable.
 """

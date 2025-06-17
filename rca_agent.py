@@ -58,7 +58,8 @@ def parse_enhanced_args():
         'logfile': None,
         'scan_system': False,
         'hours_back': 24,
-        'mode': 'basic'
+        'mode': 'basic',
+        'triage_mode': False
     }
     
     i = 1
@@ -76,6 +77,10 @@ def parse_enhanced_args():
         elif sys.argv[i] == '--hours' and i + 1 < len(sys.argv):
             args['hours_back'] = int(sys.argv[i + 1])
             i += 2
+        elif sys.argv[i] == '--triage':
+            args['triage_mode'] = True
+            args['mode'] = 'triage'
+            i += 1
         elif sys.argv[i] in ['--help', '-h']:
             print_usage()
             sys.exit(0)
@@ -110,11 +115,15 @@ USAGE MODES:
 3. Quick Analysis Mode (error description only):
    python rca_agent.py --error "Error description"
 
+4. Triage Mode (for live outages):
+   python rca_agent.py --error "Error description" --triage [--scan-system]
+
 OPTIONS:
   --error TEXT        Description of the error (required)
   --logfile PATH      Path to specific log file to analyze
   --scan-system       Automatically scan system logs for recent errors
   --hours N           Hours back to scan for errors (default: 24)
+  --triage           Run in triage mode for live outages
   --help, -h          Show this help message
   --license, -l       Show license information
 
@@ -127,6 +136,15 @@ SUPPORTED ERROR TYPES:
   - Boot and initialization problems
   - Application-level errors
   - Hardware-related issues
+  - Container runtime issues
+
+FEATURES:
+  - Context-aware impact scoring
+  - Triage mode for live outages
+  - Container health monitoring
+  - Resource usage tracking
+  - Log bundling and analysis
+  - Lessons learned tracking
 """)
 
 def main():
@@ -138,6 +156,8 @@ def main():
         
         print("=== Enhanced System Diagnostic RCA Report ===")
         print(f"Mode: {args['mode'].upper()}")
+        if args['triage_mode']:
+            print("TRIAGE MODE ENABLED - Live outage in progress")
         print(f"Timestamp: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
         print("=" * 50)
         
@@ -145,7 +165,8 @@ def main():
             args['error'], 
             args['logfile'], 
             args['scan_system'], 
-            args['hours_back']
+            args['hours_back'],
+            args['triage_mode']
         ))
         
         formatted_analysis = format_output(analysis)
@@ -155,8 +176,10 @@ def main():
         print("Analysis complete. For persistent issues, consider:")
         print("- Running with --scan-system to check broader system logs")
         print("- Increasing --hours value to scan further back in time")
+        print("- Using --triage mode for live outage situations")
         print("- Checking specific service logs in /var/log/")
         print("- Reviewing security logs if SELinux or permission issues persist")
+        print("- Monitoring container health if analyzing container issues")
         
     except KeyboardInterrupt:
         print("\n\nAnalysis interrupted by user.")
@@ -167,6 +190,7 @@ def main():
         print("1. Verify log file permissions and paths")
         print("2. Check if BeeAI framework and Ollama are properly configured")
         print("3. Ensure granite3.3:8b-beeai model is available")
+        print("4. Check container runtime status if analyzing container issues")
         sys.exit(1)
 
 if __name__ == '__main__':
