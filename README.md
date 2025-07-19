@@ -267,9 +267,13 @@ curl https://ollama.ai/install.sh | sh
 
 **3. Install BeeAI Framework:**
 ```bash
-brew install i-am-bee/beeai/beeai
+uv tool install beeai-cli
+# Start BeeAI platform
 beeai platform start
+# Set up BeeAI environment
 beeai env setup
+# Launch the BeeAI GUI
+beeai ui
 ```
 
 **4. Install Docling system dependencies (optional):**
@@ -284,27 +288,9 @@ sudo dnf install poppler-utils tesseract
 brew install poppler tesseract
 ```
 
-**5. Download Docling models for offline usage (optional):**
+**5. Pull the Granite model:**
 ```bash
-docling-tools models download
-```
-
-**6. Set environment variables (optional):**
-```bash
-# For offline model usage
-export DOCLING_ARTIFACTS_PATH="/path/to/models"
-
-# For limiting CPU usage
-export OMP_NUM_THREADS=4
-```
-
-**7. Verify installation:**
-```bash
-# Test log directory access
-ls -l /var/log/
-
-# Test system command execution
-uname -a
+ollama pull granite3.3:8b-beeai
 ```
 
 </details>
@@ -316,10 +302,10 @@ uname -a
 
 | **Docling Enhanced** | **Enhanced Basic** |
 |:---|:---|
-| **PDF Documents**: Advanced layout analysis | **Log Files**: .log, .txt with pattern detection |
-| **Office Docs**: .docx, .pptx with structure | **Config Files**: Plain text with analysis |
-| **Web Content**: .html, .md with markup | **System Logs**: Enhanced parsing + context |
-| **Structured Data**: .csv, .xlsx with tables | |
+| 📄 **PDF Documents**: Advanced layout analysis<br>`*.pdf` | 📝 **Log Files**: Pattern detection<br>`*.log`, `*.txt` |
+| 🗂️ **Office Docs**: Structure-aware parsing<br>`*.docx`, `*.pptx` | ⚙️ **Config Files**: Plain text analysis<br>`*.conf`, `*.ini`, `*.env` |
+| 🌐 **Web Content**: Markup parsing<br>`*.html`, `*.md` | 📑 **System Logs**: Contextual parsing<br>`/var/log/*`, `*.out` |
+| 📊 **Structured Data**: Table extraction<br>`*.csv`, `*.xlsx` |  |
 
 </div>
 
@@ -432,7 +418,6 @@ graph TB
 
 ### Project Structure
 
-```
 ```
 📁 GraniteRCA/
 ├── 🐍 main.py                   # Main entry point
