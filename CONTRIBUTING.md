@@ -67,7 +67,7 @@ tqdm>=4.65.0           # Progress bar functionality
 3. Install system dependencies:
    ```bash
    # Install BeeAI framework
-   brew install i-am-bee/beeai/beeai
+   uv tool install beeai-cli
    
    # Start BeeAI platform
    beeai platform start
@@ -119,7 +119,7 @@ tqdm>=4.65.0           # Progress bar functionality
 
 ## License
 
-This project is licensed under the GPLv2 License. By contributing, you agree to license your contributions under the same license.
+This project is licensed under the LGPLv3 License. By contributing, you agree to license your contributions under the same license.
 
 ## Contact
 
@@ -127,6 +127,6 @@ For questions or concerns, please open an issue in the GitHub repository.
 
 ## Additional Resources
 
-- [GPLv2 License](https://www.gnu.org/licenses/old-licenses/gpl-2.0.html)
+- [LGPLv3 License](https://www.gnu.org/licenses/lgpl-3.0.html)
 - [BeeAI Framework Documentation](https://github.com/i-am-bee/beeai)
 - [Ollama Documentation](https://ollama.ai/docs) 
