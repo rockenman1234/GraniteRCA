@@ -9,8 +9,11 @@ GraniteRCA/
 ├── rca_agent.py      # Main entry point and CLI interface
 ├── rca_core.py       # Core RCA functionality and analysis logic
 ├── rca_utils.py      # Utility functions and helper methods
+├── docling_utils.py  # Docling-based document parsing utilities
+├── container_monitor.py  # Container health monitoring
+├── resource_monitor.py   # Resource monitoring and log bundling
 ├── requirements.txt  # Python package dependencies
-├── LICENSE.md        # GPLv2 License
+├── LICENSE.md        # LGPLv3 License
 └── README.md         # Project documentation and usage guide
 ```
 
@@ -25,7 +28,7 @@ GraniteRCA/
 
 2. **rca_core.py**
    - Core RCA (Root Cause Analysis) functionality
-   - Error analysis and pattern matching
+   - Error analysis and pattern matching with Docling integration
    - System log scanning capabilities
    - Integration with BeeAI framework
    - Progress tracking and reporting
@@ -37,12 +40,24 @@ GraniteRCA/
    - System information gathering
    - Helper methods for core functionality
 
+4. **docling_utils.py** (NEW)
+   - Enhanced document parsing using Docling
+   - Intelligent text extraction with structure preservation
+   - Error pattern detection
+   - Support for multiple document formats
+   - Graceful fallback to basic parsing
+
 ## Dependencies
 
 ### Python Packages
 ```
 beeai-framework>=1.0.0  # Core AI framework for analysis
 tqdm>=4.65.0           # Progress bar functionality
+docling>=2.0.0         # Enhanced document parsing and text extraction
+psutil>=5.9.0          # System resource monitoring
+docker>=6.1.3          # Container monitoring support
+podman>=0.1.0          # Podman container support
+python-dateutil>=2.8.2 # Date parsing utilities
 ```
 
 ### System Requirements
@@ -50,6 +65,9 @@ tqdm>=4.65.0           # Progress bar functionality
 - BeeAI framework (installed via Homebrew)
 - Ollama (for local LLM support)
 - Granite 3.3 8B model
+- Docling system dependencies (optional, for enhanced parsing)
+  - poppler-utils (for PDF support)
+  - tesseract-ocr (for OCR capabilities)
 
 ## Development Setup
 
@@ -74,6 +92,13 @@ tqdm>=4.65.0           # Progress bar functionality
    
    # Setup environment
    beeai env setup
+   
+   # Install Docling system dependencies (optional)
+   # For Ubuntu/Debian
+   sudo apt-get install poppler-utils tesseract-ocr
+   
+   # For macOS
+   brew install poppler tesseract
    ```
 
 ## Code Style Guidelines
@@ -103,11 +128,14 @@ tqdm>=4.65.0           # Progress bar functionality
    - Validate output formatting
 
 2. **Error Cases to Test**
-   - Invalid log files
+   - Invalid log files and unsupported formats
    - Missing permissions
    - Network issues
    - Invalid error descriptions
    - System resource constraints
+   - Docling parsing failures and fallback scenarios
+   - Large document processing
+   - Offline model usage
 
 ## Pull Request Process
 

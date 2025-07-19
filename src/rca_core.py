@@ -4,6 +4,8 @@ Core Root Cause Analysis (RCA) functionality for system diagnostics.
 This module contains the core classes and functionality for performing system-wide
 root cause analysis, including error classification, log scanning, and system context
 gathering. It provides the foundation for the RCA agent's diagnostic capabilities.
+
+SPDX-License-Identifier: LGPL-3.0-only
 """
 
 import os
@@ -17,6 +19,8 @@ from beeai_framework.backend.chat import ChatModel
 from beeai_framework.backend.message import UserMessage, AssistantMessage
 from container_monitor import ContainerMonitor
 from resource_monitor import ResourceMonitor
+from docling_utils import DoclingLogParser
+from spinner_utils import ASCIISpinner
 
 class SystemErrorTypes:
     """Classification of different system error types for specialized analysis."""
@@ -42,9 +46,10 @@ class ImpactLevel:
     INFO = "info"        # Informational, no impact
 
 class SystemLogScanner:
-    """Scans various system logs and identifies error patterns."""
+    """Scans various system logs and identifies error patterns using Docling."""
     
-    def __init__(self):
+    def __init__(self, artifacts_path: str = None):
+        self.docling_parser = DoclingLogParser(artifacts_path=artifacts_path)
         self.log_paths = {
             'kernel': ['/var/log/kern.log', '/var/log/dmesg', '/var/log/messages'],
             'system': ['/var/log/syslog', '/var/log/messages', '/var/log/system.log'],
@@ -133,7 +138,7 @@ class SystemLogScanner:
         }
     
     def scan_system_logs(self, hours_back=24):
-        """Scan system logs for recent errors."""
+        """Scan system logs for recent errors using Docling for enhanced parsing."""
         errors_found = {}
         cutoff_time = datetime.now() - timedelta(hours=hours_back)
         
@@ -142,11 +147,20 @@ class SystemLogScanner:
             cmd = f"journalctl --since '{cutoff_time.strftime('%Y-%m-%d %H:%M:%S')}' --priority=err"
             result = subprocess.run(cmd, shell=True, capture_output=True, text=True, timeout=30)
             if result.returncode == 0 and result.stdout:
-                errors_found['journal'] = result.stdout
+                # Parse journalctl output with Docling
+                journal_content = self.docling_parser.parse_log_stream(
+                    result.stdout.encode('utf-8'), 
+                    "journalctl_errors"
+                )
+                errors_found['journal'] = {
+                    'content': journal_content['content'],
+                    'metadata': journal_content['metadata'],
+                    'error_patterns': self.docling_parser.extract_error_patterns(journal_content)
+                }
         except (subprocess.TimeoutExpired, subprocess.SubprocessError):
             pass
         
-        # Check individual log files
+        # Check individual log files with Docling
         for log_type, paths in self.log_paths.items():
             if log_type == 'journal':
                 continue
@@ -161,14 +175,31 @@ class SystemLogScanner:
                     for file_path in files:
                         if os.path.exists(file_path) and os.access(file_path, os.R_OK):
                             try:
-                                with open(file_path, 'r', errors='ignore') as f:
-                                    # Read last 1000 lines to avoid memory issues
-                                    lines = f.readlines()[-1000:]
-                                    content = ''.join(lines)
-                                    if self._contains_recent_errors(content, cutoff_time):
-                                        if log_type not in errors_found:
-                                            errors_found[log_type] = ""
-                                        errors_found[log_type] += f"\n--- {file_path} ---\n{content}"
+                                # Use Docling to parse the log file
+                                parsed_log = self.docling_parser.parse_log_file(file_path)
+                                
+                                if 'error' not in parsed_log and self._contains_recent_errors(
+                                    parsed_log['content'], cutoff_time
+                                ):
+                                    if log_type not in errors_found:
+                                        errors_found[log_type] = {
+                                            'content': '',
+                                            'metadata': {},
+                                            'error_patterns': [],
+                                            'parsed_files': []
+                                        }
+                                    
+                                    # Extract error patterns using Docling
+                                    error_patterns = self.docling_parser.extract_error_patterns(parsed_log)
+                                    
+                                    errors_found[log_type]['content'] += f"\n--- {file_path} ---\n{parsed_log['content']}"
+                                    errors_found[log_type]['error_patterns'].extend(error_patterns)
+                                    errors_found[log_type]['parsed_files'].append({
+                                        'path': file_path,
+                                        'metadata': parsed_log['metadata'],
+                                        'parsing_method': parsed_log['parsing_method']
+                                    })
+                                    
                             except (IOError, OSError):
                                 continue
                 except (OSError, PermissionError):
@@ -214,11 +245,11 @@ class SystemLogScanner:
 
 async def perform_enhanced_rca(error_desc, logfile_path=None, scan_system=False, hours_back=24, triage_mode=False):
     """
-    Performs comprehensive Root Cause Analysis with system-wide scanning capabilities.
+    Performs comprehensive Root Cause Analysis with system-wide scanning capabilities using Docling.
     
     This enhanced RCA function provides:
     1. Multi-mode operation (file-based, system scan, or quick analysis)
-    2. Automatic error classification
+    2. Automatic error classification using Docling's intelligent parsing
     3. System context gathering
     4. Progress indication during analysis
     5. Specialized analysis based on error type
@@ -226,6 +257,7 @@ async def perform_enhanced_rca(error_desc, logfile_path=None, scan_system=False,
     7. Triage mode for live outages
     8. Container health monitoring
     9. Resource monitoring and log bundling
+    10. Enhanced document parsing with Docling for better text extraction
     
     Args:
         error_desc (str): Description of the error to analyze
@@ -244,72 +276,125 @@ async def perform_enhanced_rca(error_desc, logfile_path=None, scan_system=False,
     from rca_utils import get_system_context, build_enhanced_prompt
     
     log_content = ""
+    parsed_log_metadata = {}
+    error_patterns = []
     system_context = get_system_context()
-    scanner = SystemLogScanner()
+    
+    # Initialize components with Docling support
+    artifacts_path = os.getenv('DOCLING_ARTIFACTS_PATH')
+    scanner = SystemLogScanner(artifacts_path=artifacts_path)
     resource_monitor = ResourceMonitor()
     container_monitor = ContainerMonitor()
     
-    # Create progress bar for overall analysis
+    # Create progress bar for overall analysis with spinner
     with tqdm(total=100, desc="Performing RCA", bar_format='{l_bar}{bar}| {n_fmt}/{total_fmt}') as pbar:
-        # Handle different input modes
-        if logfile_path and os.path.exists(logfile_path):
-            # Traditional mode: analyze specific log file
-            with open(logfile_path, 'r', errors='ignore') as f:
-                log_content = f.read()
-            pbar.update(20)  # 20% complete after reading log file
-        elif scan_system:
-            # Enhanced mode: scan system logs automatically
-            print(f"\nScanning system logs for errors in the last {hours_back} hours...")
-            system_errors = scanner.scan_system_logs(hours_back)
-            
-            if system_errors:
-                log_content = "\n\n".join([f"=== {source.upper()} LOGS ===\n{content}" 
-                                         for source, content in system_errors.items()])
-                print(f"Found errors in: {', '.join(system_errors.keys())}")
-            else:
-                print("No recent system errors found in accessible logs.")
-                log_content = "No recent system errors detected in standard log locations."
-            pbar.update(30)  # 30% complete after system scan
-        elif logfile_path:
-            raise FileNotFoundError(f"Log file not found: {logfile_path}")
-        else:
-            # Interactive mode: minimal analysis with system context only
-            log_content = "No specific log file provided - analysis based on error description and system context."
-            pbar.update(10)  # 10% complete for quick analysis
-        
-        # Classify error type for specialized analysis
-        error_type = scanner.classify_error_type(error_desc, log_content)
-        print(f"Error classified as: {error_type.upper()}")
-        pbar.update(20)  # 20% more complete after classification
-        
-        # Assess impact level
-        impact_level = scanner.assess_impact(error_desc, log_content)
-        print(f"Impact level: {impact_level.upper()}")
-        pbar.update(10)  # 10% more complete after impact assessment
-        
-        # Gather additional context based on error type and impact
-        additional_context = {}
-        
-        if error_type == SystemErrorTypes.CONTAINER:
-            additional_context["container_health"] = container_monitor.get_container_health()
-            
-        if impact_level in [ImpactLevel.CRITICAL, ImpactLevel.HIGH] or triage_mode:
-            additional_context["resource_usage"] = resource_monitor.get_top_info()
-            additional_context["cpu_info"] = resource_monitor.get_cpu_info()
-            
-        # Build enhanced prompt
-        prompt = build_enhanced_prompt(error_desc, log_content, error_type, system_context, 
-                                     impact_level, additional_context, triage_mode)
-        pbar.update(10)  # 10% more complete after prompt building
-        
-        # Initialize the Granite model via BeeAI
-        model = ChatModel.from_name("ollama:granite3.3:8b-beeai")
-        user_msg = UserMessage(prompt)
+        # Start spinner to show activity during progress
+        spinner = ASCIISpinner(style='dots', speed=0.15, prefix="Processing... ")
+        spinner.start()
         
         try:
-            # Show progress during model analysis
+            # Handle different input modes with Docling
+            if logfile_path and os.path.exists(logfile_path):
+                # Traditional mode: analyze specific log file with Docling
+                print(f"\nParsing log file with Docling: {logfile_path}")
+                parsed_log = scanner.docling_parser.parse_log_file(logfile_path)
+                
+                if 'error' in parsed_log:
+                    raise FileNotFoundError(f"Failed to parse log file: {parsed_log['error']}")
+                
+                log_content = parsed_log['content']
+                parsed_log_metadata = parsed_log['metadata']
+                error_patterns = scanner.docling_parser.extract_error_patterns(parsed_log)
+                
+                print(f"Parsing method: {parsed_log['parsing_method']}")
+                print(f"Document type detected: {parsed_log_metadata.get('document_type', 'unknown')}")
+                if error_patterns:
+                    print(f"Found {len(error_patterns)} error patterns")
+                
+                pbar.update(25)  # 25% complete after parsing log file
+            elif scan_system:
+                # Enhanced mode: scan system logs automatically with Docling
+                print(f"\nScanning system logs for errors in the last {hours_back} hours...")
+                if scanner.docling_parser.is_docling_available():
+                    print("Using Docling for enhanced log parsing")
+                else:
+                    print("Using fallback parsing (Docling not available)")
+                    
+                system_errors = scanner.scan_system_logs(hours_back)
+                
+                if system_errors:
+                    # Combine content from all sources
+                    content_parts = []
+                    all_error_patterns = []
+                    
+                    for source, error_data in system_errors.items():
+                        if isinstance(error_data, dict):
+                            content_parts.append(f"=== {source.upper()} LOGS ===\n{error_data.get('content', '')}")
+                            all_error_patterns.extend(error_data.get('error_patterns', []))
+                            if 'parsed_files' in error_data:
+                                print(f"  {source}: {len(error_data['parsed_files'])} files processed")
+                        else:
+                            # Fallback for old format
+                            content_parts.append(f"=== {source.upper()} LOGS ===\n{error_data}")
+                    
+                    log_content = "\n\n".join(content_parts)
+                    error_patterns = all_error_patterns
+                    
+                    print(f"Found errors in: {', '.join(system_errors.keys())}")
+                    if error_patterns:
+                        print(f"Extracted {len(error_patterns)} error patterns")
+                else:
+                    print("No recent system errors found in accessible logs.")
+                    log_content = "No recent system errors detected in standard log locations."
+                pbar.update(35)  # 35% complete after system scan
+            elif logfile_path:
+                raise FileNotFoundError(f"Log file not found: {logfile_path}")
+            else:
+                # Interactive mode: minimal analysis with system context only
+                log_content = "No specific log file provided - analysis based on error description and system context."
+                pbar.update(15)  # 15% complete for quick analysis
+            
+            # Classify error type for specialized analysis (enhanced with error patterns)
+            error_type = scanner.classify_error_type(error_desc, log_content)
+            print(f"Error classified as: {error_type.upper()}")
+            pbar.update(15)  # 15% more complete after classification
+        
+            # Assess impact level (enhanced with error patterns)
+            impact_level = scanner.assess_impact(error_desc, log_content)
+            print(f"Impact level: {impact_level.upper()}")
+            pbar.update(10)  # 10% more complete after impact assessment
+            
+            # Gather additional context based on error type and impact
+            additional_context = {
+                'docling_metadata': parsed_log_metadata,
+                'error_patterns': error_patterns[:20],  # Limit to first 20 patterns
+                'docling_available': scanner.docling_parser.is_docling_available()
+            }
+            
+            if error_type == SystemErrorTypes.CONTAINER:
+                additional_context["container_health"] = container_monitor.get_container_health()
+                
+            if impact_level in [ImpactLevel.CRITICAL, ImpactLevel.HIGH] or triage_mode:
+                additional_context["resource_usage"] = resource_monitor.get_top_info()
+                additional_context["cpu_info"] = resource_monitor.get_cpu_info()
+                
+            # Build enhanced prompt with Docling insights
+            prompt = build_enhanced_prompt(error_desc, log_content, error_type, system_context, 
+                                         impact_level, additional_context, triage_mode)
+            pbar.update(10)  # 10% more complete after prompt building
+            
+            # Initialize the Granite model via BeeAI
+            model = ChatModel.from_name("ollama:granite3.3:8b-beeai")
+            user_msg = UserMessage(prompt)
+            
+            # Show progress during model analysis with enhanced spinner
             pbar.set_description("Analyzing with Granite model")
-            response = await model.create(messages=[user_msg])
+            spinner.stop()  # Stop the initial spinner
+            
+            # Start a new spinner specifically for model analysis
+            with ASCIISpinner(style='braille', speed=0.08, prefix="AI Analysis... ") as model_spinner:
+                response = await model.create(messages=[user_msg])
+            
             pbar.update(30)  # 30% more complete after model analysis
             
             # Extract text content from response
@@ -329,7 +414,7 @@ async def perform_enhanced_rca(error_desc, logfile_path=None, scan_system=False,
             else:
                 analysis = str(response)
                 
-            # Save report with lessons learned
+            # Save report with lessons learned and Docling metadata
             report = {
                 "timestamp": datetime.now().isoformat(),
                 "error_description": error_desc,
@@ -338,6 +423,11 @@ async def perform_enhanced_rca(error_desc, logfile_path=None, scan_system=False,
                 "analysis": analysis,
                 "system_context": system_context,
                 "additional_context": additional_context,
+                "docling_parsing": {
+                    "available": scanner.docling_parser.is_docling_available(),
+                    "metadata": parsed_log_metadata,
+                    "error_patterns_found": len(error_patterns)
+                },
                 "lessons_learned": {
                     "root_cause": "To be filled after resolution",
                     "preventive_measures": "To be filled after resolution",
@@ -352,4 +442,7 @@ async def perform_enhanced_rca(error_desc, logfile_path=None, scan_system=False,
             return analysis
             
         except Exception as e:
-            raise Exception(f"Failed to get response from model: {e}") 
+            raise Exception(f"Failed to get response from model: {e}")
+        finally:
+            # Always stop the spinner, even if an exception occurs
+            spinner.stop() 

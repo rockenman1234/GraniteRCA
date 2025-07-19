@@ -2,7 +2,10 @@
 Resource monitoring and log bundling module for GraniteRCA.
 
 This module provides functionality to monitor system resources and bundle logs
-for analysis, including CPU, memory, and process information.
+for analysis using Docling for enhanced document parsing, including CPU, memory, 
+and process information.
+
+SPDX-License-Identifier: LGPL-3.0-only
 """
 
 import subprocess
@@ -13,10 +16,12 @@ from typing import Dict, List, Any, Optional
 import glob
 import shutil
 import tempfile
+from docling_utils import DoclingLogParser
 
 class ResourceMonitor:
-    def __init__(self):
+    def __init__(self, artifacts_path: Optional[str] = None):
         self.temp_dir = tempfile.mkdtemp(prefix="granite_rca_")
+        self.docling_parser = DoclingLogParser(artifacts_path=artifacts_path)
         
     def __del__(self):
         """Clean up temporary directory on object destruction."""
@@ -95,10 +100,13 @@ class ResourceMonitor:
         return top_info
         
     def bundle_logs(self, hours_back: int = 24) -> Dict[str, Any]:
-        """Bundle relevant system logs for analysis."""
+        """Bundle relevant system logs for analysis using Docling for enhanced parsing."""
         log_bundle = {
             "timestamp": datetime.now().isoformat(),
-            "logs": {}
+            "logs": {},
+            "docling_metadata": {},
+            "parsing_methods": {},
+            "error_patterns": {}
         }
         
         # Common log locations
@@ -121,16 +129,37 @@ class ResourceMonitor:
         for pattern in app_log_patterns:
             log_paths.extend(glob.glob(os.path.expanduser(pattern)))
             
-        # Collect logs
+        # Collect logs with Docling parsing
         for log_path in log_paths:
             if os.path.exists(log_path) and os.access(log_path, os.R_OK):
                 try:
-                    with open(log_path, 'r', errors='ignore') as f:
-                        # Read last 1000 lines to avoid memory issues
-                        lines = f.readlines()[-1000:]
-                        log_bundle["logs"][log_path] = ''.join(lines)
+                    # Use Docling to parse the log file
+                    parsed_log = self.docling_parser.parse_log_file(log_path)
+                    
+                    if 'error' not in parsed_log:
+                        # Store content (truncated for memory efficiency)
+                        content = parsed_log['content']
+                        if len(content) > 10000:  # Limit to ~10KB per file
+                            content = content[-10000:]  # Keep last 10KB
+                        
+                        log_bundle["logs"][log_path] = content
+                        log_bundle["docling_metadata"][log_path] = parsed_log['metadata']
+                        log_bundle["parsing_methods"][log_path] = parsed_log['parsing_method']
+                        
+                        # Extract error patterns
+                        error_patterns = self.docling_parser.extract_error_patterns(parsed_log)
+                        if error_patterns:
+                            log_bundle["error_patterns"][log_path] = error_patterns[:10]  # Limit to 10 patterns
+                    else:
+                        # Fallback to basic reading if Docling fails
+                        with open(log_path, 'r', errors='ignore') as f:
+                            lines = f.readlines()[-1000:]  # Read last 1000 lines
+                            log_bundle["logs"][log_path] = ''.join(lines)
+                            log_bundle["parsing_methods"][log_path] = "basic_fallback"
+                            
                 except Exception as e:
-                    log_bundle["logs"][log_path] = f"Error reading log: {str(e)}"
+                    log_bundle["logs"][log_path] = f"Error reading/parsing log: {str(e)}"
+                    log_bundle["parsing_methods"][log_path] = "error"
                     
         return log_bundle
         
@@ -149,12 +178,16 @@ class ResourceMonitor:
             raise Exception(f"Failed to save report: {str(e)}")
             
     def get_comprehensive_report(self) -> Dict[str, Any]:
-        """Generate a comprehensive system report."""
+        """Generate a comprehensive system report with Docling-enhanced log parsing."""
         report = {
             "timestamp": datetime.now().isoformat(),
             "cpu_info": self.get_cpu_info(),
             "resource_usage": self.get_top_info(),
-            "log_bundle": self.bundle_logs()
+            "log_bundle": self.bundle_logs(),
+            "docling_status": {
+                "available": self.docling_parser.is_docling_available(),
+                "supported_formats": self.docling_parser.get_supported_formats()
+            }
         }
         
         # Save the report

@@ -19,6 +19,8 @@ GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
 along with this program; if not, see <https://www.gnu.org/licenses/>.
+
+SPDX-License-Identifier: LGPL-3.0-only
 """
 
 import sys
@@ -34,10 +36,10 @@ GraniteRCA Agent, Copyright (C) 2025-present Kenneth (Alex) Jenkins, & contribut
 
 This program comes with ABSOLUTELY NO WARRANTY.
 This is libre/free software, and you are welcome to redistribute it under certain conditions;
-type '--license' for details.
+as described in the GNU Lesser General Public License (LGPL) version 3.
 
 A copy of this license should have been provided with this software, if not - visit:
-https://www.gnu.org/licenses/old-licenses/gpl-2.0.html
+https://www.gnu.org/licenses/lgpl-3.0
 """)
 
 def parse_enhanced_args():
@@ -107,16 +109,16 @@ Enhanced System Diagnostic RCA Agent
 USAGE MODES:
 
 1. Basic Mode (original functionality):
-   python rca_agent.py --error "Error description" --logfile path/to/logfile
+   python main.py --error "Error description" --logfile path/to/logfile
 
 2. System Scan Mode (automatic log scanning):
-   python rca_agent.py --error "Error description" --scan-system [--hours 24]
+   python main.py --error "Error description" --scan-system [--hours 24]
 
 3. Quick Analysis Mode (error description only):
-   python rca_agent.py --error "Error description"
+   python main.py --error "Error description"
 
 4. Triage Mode (for live outages):
-   python rca_agent.py --error "Error description" --triage [--scan-system]
+   python main.py --error "Error description" --triage [--scan-system]
 
 OPTIONS:
   --error TEXT        Description of the error (required)
@@ -191,6 +193,8 @@ def main():
         print("2. Check if BeeAI framework and Ollama are properly configured")
         print("3. Ensure granite3.3:8b-beeai model is available")
         print("4. Check container runtime status if analyzing container issues")
+        print("5. Install Docling for enhanced document parsing: pip install docling")
+        print("6. For offline Docling usage, set DOCLING_ARTIFACTS_PATH environment variable")
         sys.exit(1)
 
 if __name__ == '__main__':

@@ -1,9 +1,0 @@
-[2025-06-06 09:14:32] INFO Starting web service on port 8080
-[2025-06-06 09:14:33] INFO Connected to database successfully
-[2025-06-06 09:14:34] WARNING Deprecated API usage in /api/user
-[2025-06-06 09:15:10] ERROR Failed to fetch user profile: timeout while querying database
-[2025-06-06 09:15:11] ERROR Exception in /api/user: java.sql.SQLTimeoutException: Query timed out
-[2025-06-06 09:15:11] TRACE Stacktrace: at UserDAO.getUser(UserDAO.java:42)
-[2025-06-06 09:15:12] INFO Retrying request to /api/user
-[2025-06-06 09:15:13] ERROR /api/user failed after 3 retries
-[2025-06-06 09:15:14] CRITICAL Service /api/user is unavailable

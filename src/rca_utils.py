@@ -4,6 +4,8 @@ Utility functions and helpers for the RCA system.
 This module provides supporting functionality for the RCA system, including
 system context gathering, prompt building, and output formatting utilities.
 These functions are used by the core RCA functionality to enhance its capabilities.
+
+SPDX-License-Identifier: LGPL-3.0-only
 """
 
 import re
@@ -142,6 +144,28 @@ TRIAGE MODE - Live outage in progress:
 - Plan for post-incident review
 """ if triage_mode else ""
     
+    # Add Docling parsing information if available
+    docling_info = ""
+    if additional_context and "docling_metadata" in additional_context:
+        metadata = additional_context["docling_metadata"]
+        error_patterns = additional_context.get("error_patterns", [])
+        docling_available = additional_context.get("docling_available", False)
+        
+        docling_info = f"""
+DOCUMENT PARSING INFORMATION:
+- Parsing engine: {"Docling (enhanced)" if docling_available else "Basic text parser"}
+- Document type: {metadata.get('document_type', 'unknown')}
+- Structure elements: {metadata.get('structure_elements', 0)}
+- Error patterns detected: {len(error_patterns)}
+"""
+        
+        if error_patterns:
+            docling_info += "\nKEY ERROR PATTERNS DETECTED:\n"
+            for i, pattern in enumerate(error_patterns[:5], 1):  # Show first 5 patterns
+                category = pattern.get('category', 'unknown')
+                match = pattern.get('match', '')
+                docling_info += f"{i}. {category.upper()}: {match}\n"
+    
     # Add container health info if available
     container_info = ""
     if additional_context and "container_health" in additional_context:
@@ -170,6 +194,7 @@ SYSTEM CONTEXT:
 LOG ANALYSIS DATA:
 {log_lines}
 
+{docling_info}
 {container_info}
 {resource_info}
 

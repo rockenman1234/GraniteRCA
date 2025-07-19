@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: LGPL-3.0-only
 # Core dependencies
 beeai-framework>=0.1.0  # Framework for AI model interaction
 tqdm>=4.65.0           # Progress bar functionality
@@ -5,6 +6,7 @@ python-dateutil>=2.8.2
 psutil>=5.9.0  # For resource monitoring
 docker>=6.1.3  # For container monitoring
 podman>=0.1.0  # For podman support
+docling>=2.0.0  # Document parsing and extraction
 
 # System dependencies (must be installed separately)
 # - Python 3.8 or higher
