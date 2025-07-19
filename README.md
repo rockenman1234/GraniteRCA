@@ -433,24 +433,25 @@ graph TB
 ### Project Structure
 
 ```
-GraniteRCA/
-├── main.py                  # Main entry point
-├── LICENSE.md               # License details
-├── requirements.txt         # Python Dependencies
-├── README.md                # This file
-├── src/                     # Core source code
-│   ├── rca_agent.py         # CLI interface & argument parsing
-│   ├── rca_core.py          # Core RCA engine
-│   ├── rca_utils.py         # Utility functions
-│   ├── docling_utils.py     # Document parsing integration
-│   ├── resource_monitor.py  # System monitoring
-│   └── container_monitor.py # Container support
-├── docs/                    # Documentation
-│   └── CONTRIBUTING.md      # Contribution guidelines
-└── tools/                   # Utilities & testing
-    ├── docling_test.py      # Configuration testing utility
-    ├── setup.sh             # Installation script
-    └── sample.log           # Sample log file
+```
+📁 GraniteRCA/
+├── 🐍 main.py                   # Main entry point
+├── 📄 LICENSE.md                # License details
+├── 📦 requirements.txt          # Python Dependencies
+├── 📘 README.md                 # This file
+├── 📂 src/                      # Core source code
+│   ├── 🧑‍💻 rca_agent.py          # CLI interface & argument parsing
+│   ├── 🧠 rca_core.py           # Core RCA engine
+│   ├── 🛠️ rca_utils.py          # Utility functions
+│   ├── 📑 docling_utils.py      # Document parsing integration
+│   ├── 📊 resource_monitor.py   # System monitoring
+│   └── 🐳 container_monitor.py  # Container support
+├── 📚 docs/                     # Documentation
+│   └── 🤝 CONTRIBUTING.md       # Contribution guidelines
+└── 🧰 tools/                    # Utilities & testing
+    ├── 🧪 docling_test.py       # Configuration testing utility
+    ├── ⚙️ setup.sh              # Installation script
+    └── 📜 sample.log            # Sample log file
 ```
 
 ### Core Components
