@@ -231,13 +231,6 @@ The tool requires the following Python packages (automatically installed via pip
 
 ## Installation
 
-<div align="center">
-
-[![Install Button](https://img.shields.io/badge/Quick%20Install-Automated%20Setup-success?style=for-the-badge)](https://github.com/rockenman1234/GraniteRCA#automated-setup)
-[![Manual Button](https://img.shields.io/badge/Manual%20Install-Step%20by%20Step-blue?style=for-the-badge)](https://github.com/rockenman1234/GraniteRCA#manual-installation)
-
-</div>
-
 ### Automated Setup (Recommended)
 
 ```bash
