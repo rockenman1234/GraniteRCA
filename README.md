@@ -5,12 +5,6 @@
 </div>
 
 <div align="center">
-    <a href="https://www.gnu.org/licenses/lgpl-3.0" target="_blank">
-        <img src="docs/lgplv3_logo.svg" alt="LGPL v3 License" width="100" height="auto" style="margin: 10px 0;">
-    </a>
-</div>
-
-<div align="center">
 
 [![License: LGPL v3](https://img.shields.io/badge/License-LGPL%20v3-blue.svg)](https://www.gnu.org/licenses/lgpl-3.0)
 [![Python 3.8+](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
@@ -19,6 +13,12 @@
 [![Stars](https://img.shields.io/github/stars/rockenman1234/GraniteRCA?style=social)](https://github.com/rockenman1234/GraniteRCA)
 [![Forks](https://img.shields.io/github/forks/rockenman1234/GraniteRCA?style=social)](https://github.com/rockenman1234/GraniteRCA)
 [![Issues](https://img.shields.io/github/issues/rockenman1234/GraniteRCA?style=social)](https://github.com/rockenman1234/GraniteRCA/issues)
+
+<div align="center">
+    <a href="https://www.gnu.org/licenses/lgpl-3.0" target="_blank">
+        <img src="docs/lgplv3_logo.svg" alt="LGPL v3 License" width="100" height="auto" style="margin: 10px 0;">
+    </a>
+</div>
 
 **A powerful system diagnostic tool that performs comprehensive root cause analysis on Linux systems using AI-powered diagnostics and intelligent document parsing.**
 
