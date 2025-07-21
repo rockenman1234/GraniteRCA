@@ -353,23 +353,6 @@ This project is licensed under the LGPLv3 License. By contributing, you agree to
 
 For questions or concerns, please open an issue in the GitHub repository.
 
-## Additional Resources
-
-- [Project Repository](https://github.com/rockenman1234/GraniteRCA)
-- [LGPLv3 License](https://www.gnu.org/licenses/lgpl-3.0.html)
-- [BeeAI Framework Documentation](https://github.com/i-am-bee/beeai)
-- [Ollama Documentation](https://ollama.ai/docs)
-- [Docling Documentation](https://github.com/DS4SD/docling)
-- [Python Type Hints Guide](https://docs.python.org/3/library/typing.html)
-
-## Environment Variables
-
-Set these environment variables for enhanced functionality:
-
-- `DOCLING_ARTIFACTS_PATH`: Path to Docling model artifacts for offline usage
-- `GRANITE_RCA_DEBUG`: Enable debug logging for troubleshooting
-- `GRANITE_RCA_TEMP_DIR`: Custom temporary directory for analysis files
-
 ## Troubleshooting Common Issues
 
 ### Docling Installation Issues
@@ -388,17 +371,27 @@ beeai platform stop
 beeai platform start
 beeai env setup
 ```
+> [!NOTE]
+> This project is not affiliated with BeeAI, for BeeAI Framework bugs or errors - [please see their GitHub repo.](https://github.com/i-am-bee/beeai-framework)
 
 ### Container Monitoring Issues
 ```bash
-# Ensure Docker/Podman is running
-docker ps  # or podman ps
-sudo systemctl status docker  # Linux systems
+# Ensure Docker is running
+docker ps
+# or check if Podman is running
+podman ps
+# Next check SystemD for errors
+sudo systemctl status docker
+sudo systemctl status podman
 ```
 
-### Permission Issues
-```bash
-# Add user to required groups (Linux)
-sudo usermod -a -G docker,adm $USER
-# Log out and back in for changes to take effect
-``` 
+---
+
+## Additional Resources
+
+- [Project Repository](https://github.com/rockenman1234/GraniteRCA)
+- [LGPLv3 License](https://www.gnu.org/licenses/lgpl-3.0.html)
+- [BeeAI Framework Documentation](https://github.com/i-am-bee/beeai)
+- [Ollama Documentation](https://ollama.ai/docs)
+- [Docling Documentation](https://github.com/DS4SD/docling)
+- [Python Type Hints Guide](https://docs.python.org/3/library/typing.html)
