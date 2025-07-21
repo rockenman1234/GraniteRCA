@@ -625,6 +625,17 @@ We always welcome contributions! Please read our [Contributing Guide](docs/CONTR
 
 ---
 
+## Screenshots
+
+<div align="center">
+    <img src="docs/ss1.png" alt="GraniteRCA ss1" height="auto">
+    <img src="docs/ss2.png" alt="GraniteRCA ss2" height="auto">
+    <img src="docs/ss3.png" alt="GraniteRCA ss3" height="auto">
+</div>
+
+
+---
+
 <div align="center">
 
 **Made with ❤️ for System Administrators and DevOps Engineers**
