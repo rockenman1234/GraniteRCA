@@ -436,7 +436,7 @@ flowchart TB
     
     %% Analysis Pipeline
     subgraph Analysis ["🧠 Analysis Pipeline"]
-        AN1[�🗂️ Structured Analysis]
+        AN1[🗂️ Structured Analysis]
         AN2[🔍 Pattern Detection]
         AN3[🔗 Cross-Correlation]
         AN4[📊 Impact Assessment]
