@@ -5,7 +5,7 @@ This is the main entry point for the RCA system, providing a command-line interf
 for users to perform root cause analysis on system errors. It handles argument parsing,
 user interaction, and coordinates the core RCA functionality.
 
-Copyright (C) 2024 Kenneth (Alex) Jenkins
+Copyright (C) 2025 Kenneth (Alex) Jenkins
 
 This program is free software; you can redistribute it and/or
 modify it under the terms of the GNU General Public License

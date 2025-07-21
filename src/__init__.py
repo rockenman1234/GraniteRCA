@@ -4,7 +4,7 @@ GraniteRCA - Enhanced System Diagnostic RCA Tool
 A comprehensive root cause analysis tool for system administrators and DevOps
 engineers, enhanced with Docling document parsing capabilities.
 
-Copyright (C) 2024 Kenneth (Alex) Jenkins
+Copyright (C) 2025 Kenneth (Alex) Jenkins
 Licensed under LGPLv3
 
 SPDX-License-Identifier: LGPL-3.0-only

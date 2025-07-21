@@ -8,7 +8,7 @@ This is the main entry point for the GraniteRCA system.
 Usage:
     python main.py --error "Error description" [options]
 
-Copyright (C) 2024 Kenneth (Alex) Jenkins
+Copyright (C) 2025 Kenneth (Alex) Jenkins
 Licensed under LGPLv3
 
 SPDX-License-Identifier: LGPL-3.0-only

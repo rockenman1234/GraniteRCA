@@ -1,12 +1,14 @@
 # GraniteRCA
 
 <div align="center">
+    <img src="docs/logo.png" alt="GraniteRCA Logo" width="400" height="auto">
+</div>
+
+<div align="center">
     <a href="https://www.gnu.org/licenses/lgpl-3.0" target="_blank">
         <img src="docs/lgplv3_logo.svg" alt="LGPL v3 License" width="100" height="auto" style="margin: 10px 0;">
     </a>
 </div>
-
-#### Enhanced System Diagnostic Root Cause Analysis Tool with Docling, BeeAI, & IBM Granite
 
 <div align="center">
 
@@ -176,7 +178,6 @@ GraniteRCA operates in four distinct modes, each optimized for different diagnos
 [![Python](https://img.shields.io/badge/Python-3.8+-3776ab?logo=python&logoColor=white)](https://python.org)
 [![Docling](https://img.shields.io/badge/Docling-2.0+-green?logo=github)](https://github.com/DS4SD/docling)
 [![BeeAI](https://img.shields.io/badge/BeeAI-Framework-orange?logo=github)](https://github.com/i-am-bee/beeai)
-[![Ollama](https://img.shields.io/badge/Ollama-Local%20LLM-blue?logo=github)](https://ollama.ai)
 
 </div>
 
@@ -204,15 +205,16 @@ The tool requires the following Python packages (automatically installed via pip
 </details>
 
 <details>
-<summary><b>Ollama (Required)</b></summary>
+<summary><b>BeeAI Environment Configured (Required)</b></summary>
 
-- Ollama installed and running
-- Granite model available: `granite3.3:8b-beeai`
+- BeeAI should be installed and configured per [BeeAI documentation](https://docs.beeai.dev/introduction/installation)
+- For local testing and operation, Ollama should be installed and running on your system
+- The Granite model tested was: `granite3.3:8b-beeai`, but you may be able to use other models as well (your mileage may vary).
 
 </details>
 
 <details>
-<summary><b>Docling Dependencies (Optional - for enhanced parsing)</b></summary>
+<summary><b>Docling Dependencies (Required)</b></summary>
 
 - **For PDF processing**: poppler-utils, tesseract-ocr
 - **For OCR capabilities**: EasyOCR models (auto-downloaded)
@@ -225,7 +227,7 @@ The tool requires the following Python packages (automatically installed via pip
 
 - Read access to system log directories (typically `/var/log/`)
 - Permission to execute system commands for context gathering
-- SELinux status checking capability (if analyzing SELinux issues)
+- SELinux status checking capability (if you want to analyze SELinux issues)
 
 </details>
 
@@ -293,7 +295,7 @@ ollama pull granite3.3:8b-beeai
 
 <div align="center">
 
-| **Docling Enhanced** | **Enhanced Basic** |
+| **Docling Pipeline** | **GraniteRCA Pipeline** |
 |:---|:---|
 | 📄 **PDF Documents**: Advanced layout analysis<br>`*.pdf` | 📝 **Log Files**: Pattern detection<br>`*.log`, `*.txt` |
 | 🗂️ **Office Docs**: Structure-aware parsing<br>`*.docx`, `*.pptx` | ⚙️ **Config Files**: Plain text analysis<br>`*.conf`, `*.ini`, `*.env` |
@@ -303,10 +305,11 @@ ollama pull granite3.3:8b-beeai
 </div>
 
 ### How It Works
-- **Smart Detection**: Automatically detects file formats
-- **Dual Processing**: Structured docs use Docling, text files use enhanced basic parsing  
-- **Universal Patterns**: Both methods include intelligent error categorization
-- **Failsafe**: Graceful fallback ensures no parsing failures
+- **Smart Detection**: After you input your query, GraniteRCA automatically detects the file format and applies the appropriate parsing strategy:
+  - **Docling** for structured documents (PDF, DOCX, HTML)
+  - **Enhanced Basic Parsing** for text files (logs, configs)
+- **Universal Patterns**: Both pipelines share a common error pattern detection engine, allowing for consistent analysis across all formats.
+- **Failsafe**: The main pipeline has a fallback mechanism to ensure that if a file cannot be parsed by Docling, it will still be processed using the basic parsing engine.
 
 ---
 
@@ -314,7 +317,8 @@ ollama pull granite3.3:8b-beeai
 
 All usage modes now benefit from enhanced document parsing when Docling is available:
 
-> **Note:** All usage examples below have been verified and tested with the current version of GraniteRCA.
+> [!NOTE] 
+> All usage examples below have been verified and tested with the current version of GraniteRCA.
 
 ### Basic Mode (Enhanced with Docling)
 Analyze specific log files with detailed parsing:
@@ -396,15 +400,99 @@ docling --pipeline vlm --vlm-model smoldocling https://example.com/doc.pdf
 <div align="center">
 
 ```mermaid
-graph TB
-    A[📄 Document Input] --> B{🧩 Format Detection}
-    B -->|📑 PDF/DOCX/HTML| C[🦾 Docling Parser]
-    B -->|📜 LOG/TXT| D[🔍 Enhanced Basic Parser]
-    C --> E[🗂️ Structured Analysis]
-    D --> F[🧠 Pattern Detection]
-    E --> G[🤖 AI Analysis]
-    F --> G
-    G --> H[📊 RCA Report]
+flowchart TB
+    %% Input Sources
+    subgraph Input ["📥 Input Sources"]
+        A1[📄 Log Files]
+        A2[📑 PDF Documents]
+        A3[🗂️ Office Docs]
+        A4[🌐 General Questions]
+        A5[🐳 Container Logs]
+    end
+    
+    %% Operation Modes
+    subgraph Modes ["🎯 Operation Modes"]
+        M1[🔍 Basic Mode]
+        M2[🔄 System Scan]
+        M3[⚡ Quick Analysis]
+        M4[🚨 Triage Mode]
+    end
+    
+    %% Format Detection Engine
+    FD{🧩 Format Detection Engine}
+    
+    %% Parsing Engines
+    subgraph Parsing ["Parsing Engines"]
+        P1[🦾 Docling Parser<br/>PDF/DOCX/HTML/CSV]
+        P2[🔍 Enhanced Basic Parser<br/>LOG/TXT/CONFIG]
+    end
+    
+    %% System Monitoring
+    subgraph Monitor ["📊 System Monitoring"]
+        SM1[💾 Resource Monitor]
+        SM2[🐳 Container Monitor]
+        SM3[🏎️ Performance Metrics]
+    end
+    
+    %% Analysis Pipeline
+    subgraph Analysis ["🧠 Analysis Pipeline"]
+        AN1[�🗂️ Structured Analysis]
+        AN2[🔍 Pattern Detection]
+        AN3[🔗 Cross-Correlation]
+        AN4[📊 Impact Assessment]
+    end
+    
+    %% AI Processing
+    subgraph AI ["🤖 AI Processing"]
+        AI1[🐝 BeeAI Framework]
+        AI2[🧩 Granite LLM]
+        AI3[🎯 Context Building]
+    end
+    
+    %% Output Generation
+    subgraph Output ["📋 Output Generation"]
+        O1[📊 Saved JSON Report]
+        O2[🎯 Impact Scoring]
+        O3[💡 Recommendations]
+        O4[🔄 Lessons Learned]
+    end
+    
+    %% Flow Connections
+    Input --> FD
+    Modes --> FD
+    
+    FD -->|Structured Formats| P1
+    FD -->|Text/Log Formats| P2
+    
+    P1 --> AN1
+    P2 --> AN2
+    
+    Monitor --> AN3
+    AN1 --> AN3
+    AN2 --> AN3
+    AN3 --> AN4
+    
+    AN4 --> AI3
+    AI3 --> AI1
+    AI1 --> AI2
+    AI2 --> Output
+    
+    %% Styling
+    classDef inputClass fill:#e1f5fe,stroke:#0277bd,stroke-width:2px
+    classDef modeClass fill:#f3e5f5,stroke:#7b1fa2,stroke-width:2px
+    classDef parseClass fill:#e8f5e8,stroke:#2e7d32,stroke-width:2px
+    classDef monitorClass fill:#fff3e0,stroke:#ef6c00,stroke-width:2px
+    classDef analysisClass fill:#fce4ec,stroke:#c2185b,stroke-width:2px
+    classDef aiClass fill:#e3f2fd,stroke:#1976d2,stroke-width:2px
+    classDef outputClass fill:#f1f8e9,stroke:#558b2f,stroke-width:2px
+    
+    class A1,A2,A3,A4,A5 inputClass
+    class M1,M2,M3,M4 modeClass
+    class P1,P2 parseClass
+    class SM1,SM2,SM3 monitorClass
+    class AN1,AN2,AN3,AN4 analysisClass
+    class AI1,AI2,AI3 aiClass
+    class O1,O2,O3,O4 outputClass
 ```
 
 </div>
@@ -515,6 +603,25 @@ Fast analysis when you only have an error description:
 ```bash
 python main.py --error "Out of memory error in web application"
 ```
+
+---
+## TODO: Features Coming Soon
+
+<div align="center">
+
+| Feature | Description | Status |
+|:--------|:------------|:------:|
+| **CI/CD Integration** | Automated sanity checks in pipelines | ⏳ |
+| **`granite-io` Framework Support** | Integration with `granite-io` as an alternative LLM backend | ⏳ |
+| **TUI Interface** | Text-based user interface for easier interaction, configuration, and debugging | ⏳ |
+
+</div>
+
+---
+
+## Contributing
+
+We always welcome contributions! Please read our [Contributing Guide](docs/CONTRIBUTING.md) for details on how to get started.
 
 ---
 

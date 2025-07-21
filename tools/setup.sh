@@ -5,7 +5,7 @@ GraniteRCA Installation and Setup Script
 This script helps set up GraniteRCA with Docling integration.
 Run with: bash setup.sh
 
-Copyright (C) 2024 Kenneth (Alex) Jenkins
+Copyright (C) 2025 Kenneth (Alex) Jenkins
 Licensed under LGPLv3
 
 SPDX-License-Identifier: LGPL-3.0-only

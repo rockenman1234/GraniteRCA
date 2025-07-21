@@ -12,7 +12,7 @@ Usage:
     python docling_test.py --url https://example.com/document.pdf
     python docling_test.py --test-parsing
 
-Copyright (C) 2024 Kenneth (Alex) Jenkins
+Copyright (C) 2025 Kenneth (Alex) Jenkins
 Licensed under LGPLv3
 
 SPDX-License-Identifier: LGPL-3.0-only
