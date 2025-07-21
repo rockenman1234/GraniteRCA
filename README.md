@@ -627,6 +627,8 @@ We always welcome contributions! Please read our [Contributing Guide](docs/CONTR
 
 ## Screenshots
 
+- Below are screenshots from the following query: `python main.py --error "My users cannot connect to my java API" --logfile ./tools/sample.log`
+
 <div align="center">
     <img src="docs/ss1.png" alt="GraniteRCA ss1" height="auto">
     <img src="docs/ss2.png" alt="GraniteRCA ss2" height="auto">
