@@ -5,7 +5,7 @@ This module contains the core classes and functionality for performing system-wi
 root cause analysis, including error classification, log scanning, and system context
 gathering. It provides the foundation for the RCA agent's diagnostic capabilities.
 
-SPDX-License-Identifier: LGPL-3.0-only
+SPDX-License-Identifier: Apache-2.0
 """
 
 import os
