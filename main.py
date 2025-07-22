@@ -11,7 +11,7 @@ Usage:
 Copyright (C) 2025 Kenneth (Alex) Jenkins
 Licensed under LGPLv3
 
-SPDX-License-Identifier: LGPL-3.0-only
+SPDX-License-Identifier: Apache-2.0
 """
 
 import sys
