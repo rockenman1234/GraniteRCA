@@ -4,7 +4,7 @@ ASCII Spinner utility for showing progress during long-running operations.
 This module provides a simple ASCII spinner that can run alongside tqdm progress bars
 to indicate that the program is active and not hung.
 
-SPDX-License-Identifier: LGPL-3.0-only
+SPDX-License-Identifier: Apache-2.0
 """
 
 import threading
