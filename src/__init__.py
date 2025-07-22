@@ -7,7 +7,7 @@ engineers, enhanced with Docling document parsing capabilities.
 Copyright (C) 2025 Kenneth (Alex) Jenkins
 Licensed under LGPLv3
 
-SPDX-License-Identifier: LGPL-3.0-only
+SPDX-License-Identifier: Apache-2.0
 """
 
 __version__ = "1.0.0"
