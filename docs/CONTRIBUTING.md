@@ -10,7 +10,7 @@ This document provides guidelines and information for contributing to the projec
 GraniteRCA/
 ├── main.py                    # Main entry point wrapper
 ├── requirements.txt           # Python package dependencies
-├── LICENSE.md                 # LGPLv3 License
+├── LICENSE.md                 # Apache 2.0 License
 ├── README.md                  # Project documentation and usage guide
 ├── src/                       # Source code directory
 │   ├── __init__.py            # Package initialization
@@ -23,8 +23,7 @@ GraniteRCA/
 │   └── spinner_utils.py       # Progress indicators and UI utilities
 ├── docs/                      # Documentation
 │   ├── CONTRIBUTING.md        # This file
-│   ├── logo.png               # Project logo
-│   └── lgplv3_logo.svg        # License logo
+│   └── logo.png               # Project logo
 └── tools/                     # Development and testing utilities
     ├── setup.sh               # Automated setup script
     ├── docling_test.py        # Docling configuration testing
@@ -347,7 +346,7 @@ bash setup.sh
 
 ## License
 
-This project is licensed under the LGPLv3 License. By contributing, you agree to license your contributions under the same license.
+This project is licensed under the Apache 2.0 License. By contributing, you agree to license your contributions under the same license.
 
 ## Contact
 
@@ -390,7 +389,7 @@ sudo systemctl status podman
 ## Additional Resources
 
 - [Project Repository](https://github.com/rockenman1234/GraniteRCA)
-- [LGPLv3 License](https://www.gnu.org/licenses/lgpl-3.0.html)
+- [Apache 2.0 License](https://spdx.org/licenses/Apache-2.0.html)
 - [BeeAI Framework Documentation](https://github.com/i-am-bee/beeai)
 - [Ollama Documentation](https://ollama.ai/docs)
 - [Docling Documentation](https://github.com/DS4SD/docling)
