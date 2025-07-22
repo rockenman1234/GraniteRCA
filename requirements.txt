@@ -1,4 +1,4 @@
-# SPDX-License-Identifier: LGPL-3.0-only
+# SPDX-License-Identifier: Apache-2.0
 # Core dependencies
 beeai-framework>=0.1.0  # Framework for AI model interaction
 tqdm>=4.65.0           # Progress bar functionality
