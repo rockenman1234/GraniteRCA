@@ -5,7 +5,7 @@ This module provides functionality to monitor system resources and bundle logs
 for analysis using Docling for enhanced document parsing, including CPU, memory, 
 and process information.
 
-SPDX-License-Identifier: LGPL-3.0-only
+SPDX-License-Identifier: Apache-2.0
 """
 
 import subprocess
