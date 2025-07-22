@@ -4,7 +4,7 @@ Container monitoring module for GraniteRCA.
 This module provides functionality to monitor container health for both Podman and Docker,
 including resource usage, status, and log collection.
 
-SPDX-License-Identifier: LGPL-3.0-only
+SPDX-License-Identifier: Apache-2.0
 """
 
 import subprocess
