@@ -9,7 +9,6 @@ Usage:
     python main.py --error "Error description" [options]
 
 Copyright (C) 2025 Kenneth (Alex) Jenkins
-Licensed under LGPLv3
 
 SPDX-License-Identifier: Apache-2.0
 """
