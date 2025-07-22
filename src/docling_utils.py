@@ -5,7 +5,7 @@ This module provides document parsing functionality using Docling for enhanced
 log file analysis, including support for various document formats and intelligent
 text extraction with structure preservation.
 
-SPDX-License-Identifier: LGPL-3.0-only
+SPDX-License-Identifier: Apache-2.0
 """
 
 import os
