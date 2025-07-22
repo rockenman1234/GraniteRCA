@@ -5,7 +5,7 @@ This module provides supporting functionality for the RCA system, including
 system context gathering, prompt building, and output formatting utilities.
 These functions are used by the core RCA functionality to enhance its capabilities.
 
-SPDX-License-Identifier: LGPL-3.0-only
+SPDX-License-Identifier: Apache-2.0
 """
 
 import re
