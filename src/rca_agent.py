@@ -7,20 +7,11 @@ user interaction, and coordinates the core RCA functionality.
 
 Copyright (C) 2025 Kenneth (Alex) Jenkins
 
-This program is free software; you can redistribute it and/or
-modify it under the terms of the GNU General Public License
-as published by the Free Software Foundation; either version 2
-of the License, or (at your option) any later version.
-
 This program is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
-You should have received a copy of the GNU General Public License
-along with this program; if not, see <https://www.gnu.org/licenses/>.
-
-SPDX-License-Identifier: LGPL-3.0-only
+SPDX-License-Identifier: Apache-2.0
 """
 
 import sys
@@ -35,11 +26,11 @@ def show_license():
 GraniteRCA Agent, Copyright (C) 2025-present Kenneth (Alex) Jenkins, & contributors.
 
 This program comes with ABSOLUTELY NO WARRANTY.
-This is libre/free software, and you are welcome to redistribute it under certain conditions;
-as described in the GNU Lesser General Public License (LGPL) version 3.
+This is free software, and you are welcome to redistribute it under certain conditions;
+as described in the Apache Public License Version 2.0.
 
 A copy of this license should have been provided with this software, if not - visit:
-https://www.gnu.org/licenses/lgpl-3.0
+https://www.apache.org/licenses/LICENSE-2.0
 """)
 
 def parse_enhanced_args():
