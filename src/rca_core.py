@@ -22,6 +22,14 @@ from resource_monitor import ResourceMonitor
 from docling_utils import DoclingLogParser
 from spinner_utils import ASCIISpinner
 
+# Granite-IO imports with error handling
+try:
+    from granite_io_processor import GraniteIOProcessor
+    GRANITE_IO_AVAILABLE = True
+except ImportError:
+    GRANITE_IO_AVAILABLE = False
+    GraniteIOProcessor = None
+
 class SystemErrorTypes:
     """Classification of different system error types for specialized analysis."""
     
@@ -243,7 +251,7 @@ class SystemLogScanner:
                     
         return ImpactLevel.INFO
 
-async def perform_enhanced_rca(error_desc, logfile_path=None, scan_system=False, hours_back=24, triage_mode=False):
+async def perform_enhanced_rca(error_desc, logfile_path=None, scan_system=False, hours_back=24, triage_mode=False, framework='beeai'):
     """
     Performs comprehensive Root Cause Analysis with system-wide scanning capabilities using Docling.
     
@@ -383,36 +391,44 @@ async def perform_enhanced_rca(error_desc, logfile_path=None, scan_system=False,
                                          impact_level, additional_context, triage_mode)
             pbar.update(10)  # 10% more complete after prompt building
             
-            # Initialize the Granite model via BeeAI
-            model = ChatModel.from_name("ollama:granite3.3:8b-beeai")
-            user_msg = UserMessage(prompt)
-            
-            # Show progress during model analysis with enhanced spinner
-            pbar.set_description("Analyzing with Granite model")
+            # Initialize the LLM model based on selected framework
+            pbar.set_description(f"Analyzing with {framework.upper()} framework")
             spinner.stop()  # Stop the initial spinner
             
             # Start a new spinner specifically for model analysis
-            with ASCIISpinner(style='braille', speed=0.08, prefix="AI Analysis... ") as model_spinner:
-                response = await model.create(messages=[user_msg])
+            with ASCIISpinner(style='braille', speed=0.08, prefix="LLM Analysis... ") as model_spinner:
+                if framework == 'granite-io':
+                    if not GRANITE_IO_AVAILABLE:
+                        raise Exception("Granite-IO processing not available. Install with: pip install granite-io")
+                    
+                    # Use Granite-IO processor
+                    processor = GraniteIOProcessor(model_name="granite3.2:8b", backend_type="openai")
+                    analysis = await processor.create_chat_completion(prompt, use_thinking=triage_mode)
+                    
+                else:  # Default to BeeAI
+                    # Use BeeAI platform (default)
+                    model = ChatModel.from_name("ollama:granite3.3:8b-beeai")
+                    user_msg = UserMessage(prompt)
+                    response = await model.create(messages=[user_msg])
+                    
+                    # Extract text content from BeeAI response
+                    if isinstance(response, list) and len(response) > 0:
+                        if hasattr(response[0], "text"):
+                            analysis = response[0].text
+                        else:
+                            analysis = str(response[0])
+                    elif hasattr(response, "messages"):
+                        messages = response.messages
+                        if isinstance(messages, list) and len(messages) > 0 and hasattr(messages[0], "text"):
+                            analysis = messages[0].text
+                        else:
+                            analysis = str(messages)
+                    elif hasattr(response, "text"):
+                        analysis = response.text
+                    else:
+                        analysis = str(response)
             
             pbar.update(30)  # 30% more complete after model analysis
-            
-            # Extract text content from response
-            if isinstance(response, list) and len(response) > 0:
-                if hasattr(response[0], "text"):
-                    analysis = response[0].text
-                else:
-                    analysis = str(response[0])
-            elif hasattr(response, "messages"):
-                messages = response.messages
-                if isinstance(messages, list) and len(messages) > 0 and hasattr(messages[0], "text"):
-                    analysis = messages[0].text
-                else:
-                    analysis = str(messages)
-            elif hasattr(response, "text"):
-                analysis = response.text
-            else:
-                analysis = str(response)
                 
             # Save report with lessons learned and Docling metadata
             report = {
@@ -420,6 +436,7 @@ async def perform_enhanced_rca(error_desc, logfile_path=None, scan_system=False,
                 "error_description": error_desc,
                 "error_type": error_type,
                 "impact_level": impact_level,
+                "framework_used": framework,
                 "analysis": analysis,
                 "system_context": system_context,
                 "additional_context": additional_context,

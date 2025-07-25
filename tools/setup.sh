@@ -59,23 +59,39 @@ fi
 if command -v ollama >/dev/null 2>&1; then
     echo "✅ Ollama found"
     
-    # Check if granite model is available
+    # Check if BeeAI model is available (primary)
     if ollama list | grep -q "granite3.3:8b-beeai"; then
-        echo "✅ Granite model available"
+        echo "✅ BeeAI Granite model available"
     else
-        echo "⚠️  Granite model not found. Install with:"
+        echo "⚠️  BeeAI Granite model not found. Install with:"
         echo "   ollama pull granite3.3:8b-beeai"
+    fi
+    
+    # Check if Granite-IO model is available (optional)
+    if ollama list | grep -q "granite3.2:8b"; then
+        echo "✅ Granite-IO model available"
+    else
+        echo "ℹ️  Granite-IO model not found (optional). Install with:"
+        echo "   ollama pull granite3.2:8b"
     fi
 else
     echo "⚠️  Ollama not found - install from https://ollama.ai/"
 fi
 
-# Check for BeeAI
+# Check for BeeAI Platform
 if command -v beeai >/dev/null 2>&1; then
-    echo "✅ BeeAI CLI found"
+    echo "✅ BeeAI platform CLI found"
 else
-    echo "⚠️  BeeAI CLI not found. Install with:"
+    echo "⚠️  BeeAI platform CLI not found. Install with:"
     echo "   brew install i-am-bee/beeai/beeai"
+fi
+
+# Check for Granite-IO (optional)
+if python3 -c "import granite_io" 2>/dev/null; then
+    echo "✅ Granite-IO processing available"
+else
+    echo "ℹ️  Granite-IO processing not found (optional). Install with:"
+    echo "   pip install granite-io"
 fi
 
 # Test basic functionality
@@ -93,13 +109,25 @@ python3 docling_test.py --test-parsing
 echo ""
 echo "🎉 Setup complete!"
 echo ""
-echo "Next steps:"
-echo "1. Start Ollama: ollama serve"
-echo "2. Pull Granite model: ollama pull granite3.3:8b-beeai"
-echo "3. Setup BeeAI: beeai platform start && beeai env setup"
-echo "4. Test with: python3 ../main.py --error 'Test error' --scan-system"
+echo "Next steps - LLM Framework Configuration:"
 echo ""
-echo "For enhanced parsing, consider installing system dependencies:"
+echo "Primary: BeeAI Platform (Default)"
+echo "1. Start Ollama: ollama serve"
+echo "2. Pull BeeAI model: ollama pull granite3.3:8b-beeai"
+echo "3. Setup BeeAI platform: beeai platform start && beeai env setup"
+echo ""
+echo "Optional: Granite-IO Processing (Enhanced Features)"
+echo "1. Install Granite-IO: pip install granite-io"
+echo "2. Pull Granite-IO model: ollama pull granite3.2:8b"
+echo ""
+echo "Testing Commands:"
+echo "- Comprehensive framework test: python3 test_frameworks.py"
+echo "- Test BeeAI platform (default): python3 ../main.py --error 'Test error'"
+echo "- Test Granite-IO processing: python3 ../main.py --error 'Test error' --llm-framework granite-io"
+echo "- System scan with BeeAI: python3 ../main.py --error 'Test error' --scan-system"
+echo "- System scan with Granite-IO: python3 ../main.py --error 'Test error' --scan-system --llm-framework granite-io"
+echo ""
+echo "For enhanced document parsing, install system dependencies:"
 echo "- macOS: brew install poppler tesseract"
 echo "- Ubuntu: sudo apt-get install poppler-utils tesseract-ocr"
 echo ""

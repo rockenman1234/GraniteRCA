@@ -10,11 +10,12 @@
 [![Python 3.8+](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
 [![Docling Integration](https://img.shields.io/badge/Docling-Enhanced%20Parsing-green.svg)](https://github.com/DS4SD/docling)
 [![BeeAI Framework](https://img.shields.io/badge/BeeAI-Framework-orange.svg)](https://github.com/i-am-bee/beeai)
+[![Granite-IO](https://img.shields.io/badge/Granite--IO-Processing-blue.svg)](https://github.com/ibm-granite/granite-io)
 [![Stars](https://img.shields.io/github/stars/rockenman1234/GraniteRCA?style=social)](https://github.com/rockenman1234/GraniteRCA)
 [![Forks](https://img.shields.io/github/forks/rockenman1234/GraniteRCA?style=social)](https://github.com/rockenman1234/GraniteRCA)
 [![Issues](https://img.shields.io/github/issues/rockenman1234/GraniteRCA?style=social)](https://github.com/rockenman1234/GraniteRCA/issues)
 
-**A powerful system diagnostic tool that performs comprehensive root cause analysis on Linux systems using AI-powered diagnostics and intelligent document parsing.**
+**A powerful system diagnostic tool that performs comprehensive root cause analysis on Linux systems using AI-powered diagnostics and intelligent document parsing. Features dual LLM framework support with BeeAI platform integration and optional Granite-IO processing.**
 
 [Quick Start](#installation) •
 [Documentation](#usage) •
@@ -165,6 +166,40 @@ GraniteRCA operates in four distinct modes, each optimized for different diagnos
 - **Multi-Document**: Correlates findings across different file formats
 - **Performance-Optimized**: Intelligent parsing reduces analysis time
 
+## LLM Framework Support
+
+GraniteRCA provides dual LLM framework support for comprehensive analysis capabilities:
+
+<div align="center">
+
+| **Framework** | **Model** | **Features** | **Usage** |
+|:-------------|:----------|:-------------|:----------|
+| **BeeAI Platform** | `granite3.3:8b-beeai` | Production-ready platform, integrated toolchain, proven stability | Default (no flag) |
+| **Granite-IO Processing** | `granite3.2:8b` | Enhanced IO processing, thinking mode, multiple backends | `--llm-framework granite-io` |
+
+</div>
+
+### BeeAI Platform (Default)
+- **Production-Ready**: Comprehensive platform with integrated development environment
+- **Proven Stability**: Battle-tested in production environments with reliable inference
+- **Integrated Toolchain**: Complete ecosystem with GUI, CLI, and monitoring capabilities
+- **Straightforward Deployment**: Ollama-based model serving with platform management
+
+### Granite-IO Processing (Optional)
+- **Enhanced IO Pipeline**: Advanced input/output processing with optimized Granite model integration
+- **Thinking Mode**: Complex reasoning capabilities available in triage mode analysis
+- **Multiple Backend Support**: Configurable backends including OpenAI, LiteLLM, and Transformers
+- **Optimized Inference**: High-performance processing pipeline with reduced latency
+
+### Framework Selection
+```bash
+# Use BeeAI platform (default - no flag needed)
+python main.py --error "Database connection timeout"
+
+# Use Granite-IO processing (optional enhancement)
+python main.py --error "Database connection timeout" --llm-framework granite-io
+```
+
 ## Dependencies
 
 <div align="center">
@@ -172,6 +207,7 @@ GraniteRCA operates in four distinct modes, each optimized for different diagnos
 [![Python](https://img.shields.io/badge/Python-3.8+-3776ab?logo=python&logoColor=white)](https://python.org)
 [![Docling](https://img.shields.io/badge/Docling-2.0+-green?logo=github)](https://github.com/DS4SD/docling)
 [![BeeAI](https://img.shields.io/badge/BeeAI-Framework-orange?logo=github)](https://github.com/i-am-bee/beeai)
+[![Granite-IO](https://img.shields.io/badge/Granite--IO-0.5.1+-blue?logo=github)](https://github.com/ibm-granite/granite-io)
 
 </div>
 
@@ -180,7 +216,8 @@ The tool requires the following Python packages (automatically installed via pip
 
 | Package | Version | Purpose |
 |---------|---------|---------|
-| `beeai-framework` | ≥1.0.0 | Framework for AI model interaction |
+| `beeai-framework` | ≥1.0.0 | Primary LLM framework with integrated platform |
+| `granite-io` | ≥0.5.1 | Optional enhanced IO processing framework |
 | `tqdm` | ≥4.65.0 | Progress bar functionality |
 | `docling` | ≥2.0.0 | Enhanced document parsing and text extraction |
 | `psutil` | ≥5.9.0 | System resource monitoring |
@@ -199,11 +236,11 @@ The tool requires the following Python packages (automatically installed via pip
 </details>
 
 <details>
-<summary><b>BeeAI Environment Configured (Required)</b></summary>
+<summary><b>BeeAI Platform Configuration (Required)</b></summary>
 
-- BeeAI should be installed and configured per [BeeAI documentation](https://docs.beeai.dev/introduction/installation)
-- For local testing and operation, Ollama should be installed and running on your system
-- The Granite model tested was: `granite3.3:8b-beeai`, but you may be able to use other models as well (your mileage may vary).
+- BeeAI platform should be installed and configured per [BeeAI documentation](https://docs.beeai.dev/introduction/installation)
+- Ollama server installation required for local model serving
+- Default model: `granite3.3:8b-beeai` (tested and verified)
 
 </details>
 
@@ -254,7 +291,9 @@ curl https://ollama.ai/install.sh | sh
 ```
 > For Windows - Download from [ollama.ai](https://ollama.ai/download)
 
-**3. Install BeeAI Framework:**
+**3. Configure LLM Framework (Choose Primary or Optional):**
+
+**Primary: BeeAI Platform (Default)**
 ```bash
 uv tool install beeai-cli
 # Start BeeAI platform
@@ -263,6 +302,18 @@ beeai platform start
 beeai env setup
 # Launch the BeeAI GUI
 beeai ui
+
+# Pull the primary model
+ollama pull granite3.3:8b-beeai
+```
+
+**Optional: Granite-IO Processing (Enhanced Features)**
+```bash
+# Install Granite-IO for enhanced processing
+pip install granite-io
+
+# Pull the Granite-IO model
+ollama pull granite3.2:8b
 ```
 
 **4. Install Docling system dependencies (optional):**
@@ -277,9 +328,16 @@ sudo dnf install poppler-utils tesseract
 brew install poppler tesseract
 ```
 
-**5. Pull the Granite model:**
+**5. Verify LLM Framework Installation:**
 ```bash
-ollama pull granite3.3:8b-beeai
+# Test BeeAI platform (primary)
+beeai --version
+
+# Test Granite-IO (optional)
+python -c "import granite_io; print('Granite-IO available')"
+
+# Verify Ollama models
+ollama list
 ```
 
 </details>
@@ -376,6 +434,7 @@ docling --pipeline vlm --vlm-model smoldocling https://example.com/doc.pdf
 | `--scan-system` | Automatically scan system logs for recent errors | `--scan-system` |
 | `--hours N` | Hours back to scan for errors *(default: 24)* | `--hours 48` |
 | `--triage` | Run in triage mode for live outages | `--triage` |
+| `--llm-framework NAME` | LLM framework: 'granite-io' for enhanced processing (default: beeai) | `--llm-framework granite-io` |
 | `--help, -h` | Show help message and usage information | `--help` |
 | `--license, -l` | Show license information | `--license` |
 
@@ -388,6 +447,33 @@ docling --pipeline vlm --vlm-model smoldocling https://example.com/doc.pdf
 | `--file PATH` | Test parsing a local file | `--file /var/log/syslog` |
 | `--url URL` | Test parsing a remote document | `--url https://example.com/doc.pdf` |
 | `--test-parsing` | Run comprehensive configuration tests | `--test-parsing` |
+
+### LLM Framework Testing (validate your setup)
+
+```bash
+# Test both BeeAI and Granite-IO frameworks
+python tools/test_frameworks.py
+
+# Quick framework validation
+python tools/test_frameworks.py 2>&1 | grep "✅\|❌\|⚠️"
+```
+
+The test script validates:
+- **Import Resolution**: Checks all required modules load correctly
+- **BeeAI Platform**: Tests default LLM framework functionality  
+- **Granite-IO Processing**: Tests optional enhanced framework
+- **RCA Core Integration**: Validates framework parameter support
+- **CLI Integration**: Tests command-line framework selection
+
+### LLM Framework Testing Options (tools/test_frameworks.py)
+
+| Test Category | Description | Expected Result |
+|---------------|-------------|-----------------|
+| Import Tests | Validates module imports | All core modules load successfully |
+| BeeAI Platform | Tests primary LLM framework | Model initialization and completion |
+| Granite-IO Processing | Tests enhanced framework | Processor initialization and completion |
+| RCA Integration | Tests framework parameter support | Function signature validation |
+| CLI Integration | Tests command-line parsing | Framework selection works correctly |
 
 ## Architecture
 
@@ -530,6 +616,20 @@ flowchart TB
 
 ## Examples
 
+### Basic Analysis with LLM Framework Options
+
+**Using BeeAI Platform (Default):**
+```bash
+# Standard production-ready analysis with integrated platform
+python main.py --error "Database connection timeout after 30 seconds" --scan-system
+```
+
+**Using Granite-IO Processing (Enhanced Features):**
+```bash
+# Enhanced processing with thinking capabilities and optimized inference
+python main.py --error "Database connection timeout after 30 seconds" --llm-framework granite-io --scan-system
+```
+
 ### Database Connection Timeout
 Analyze database-related issues with automatic system scanning:
 ```bash
@@ -541,16 +641,16 @@ python main.py --error "Database connection timeout after 30 seconds" --scan-sys
 - Correlates error patterns across multiple document types
 - Provides detailed timeline analysis
 
-### Container Crash Analysis
-Investigate container failures with specific log analysis:
+### Container Crash Analysis with Enhanced Processing
+Investigate container failures with advanced LLM processing:
 ```bash
-python main.py --error "Container app-frontend crashed with exit code 1" --logfile /var/log/messages --triage
+python main.py --error "Container app-frontend crashed with exit code 1" --logfile /var/log/messages --triage --llm-framework granite-io
 ```
 
-**Enhanced Features:**
-- Advanced parsing of Docker structured logs
-- Cross-references with application documentation (if available)
-- Intelligent error categorization
+**Enhanced Features with Granite-IO:**
+- Advanced reasoning with thinking mode in triage scenarios
+- Optimized context understanding and error analysis
+- Enhanced error categorization and actionable recommendations
 
 ### System Performance Analysis
 Diagnose system-wide performance issues:
@@ -563,16 +663,16 @@ python main.py --error "High CPU usage and slow response" --scan-system
 - Correlates error patterns across multiple document types
 - Provides detailed timeline analysis
 
-### Emergency Triage Mode
+### Emergency Triage Mode with Enhanced LLM Processing
 For critical live outages requiring immediate attention:
 ```bash
-python main.py --error "Critical service outage - users cannot access application" --triage --scan-system
+python main.py --error "Critical service outage - users cannot access application" --triage --scan-system --llm-framework granite-io
 ```
 
-**Triage Features:**
-- Prioritizes critical issues for immediate response
-- Fast analysis mode for emergency situations
-- Comprehensive system scanning for root cause identification
+**Triage Features with Granite-IO:**
+- Advanced thinking mode for complex reasoning in emergency scenarios
+- Enhanced context processing for accelerated root cause identification
+- Optimized emergency response recommendations with structured output
 
 ### Application Log Analysis
 Analyze specific application log files for errors:
@@ -584,6 +684,16 @@ python main.py --error "Java application throwing NullPointerException" --logfil
 Investigate SELinux or security-related issues:
 ```bash
 python main.py --error "Permission denied accessing /var/lib/mysql" --scan-system --hours 12
+```
+
+### LLM Framework Comparison Example
+Test both frameworks with identical analysis scenarios:
+```bash
+# Test with BeeAI platform (default)
+python main.py --error "Kernel panic on boot" --scan-system
+
+# Test with Granite-IO processing (enhanced)
+python main.py --error "Kernel panic on boot" --llm-framework granite-io --scan-system
 ```
 
 ### Historical Analysis
@@ -606,8 +716,6 @@ python main.py --error "Out of memory error in web application"
 | Feature | Description | Status |
 |:--------|:------------|:------:|
 | **CI/CD Integration** | Automated sanity checks in pipelines | ⏳ |
-| **`granite-io` Framework Support** | Integration with `granite-io` as an alternative LLM backend | ⏳ |
-| **TUI Interface** | Text-based user interface for easier interaction, configuration, and debugging | ⏳ |
 
 </div>
 

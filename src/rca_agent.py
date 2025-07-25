@@ -52,7 +52,8 @@ def parse_enhanced_args():
         'scan_system': False,
         'hours_back': 24,
         'mode': 'basic',
-        'triage_mode': False
+        'triage_mode': False,
+        'framework': 'beeai'  # Default to BeeAI platform
     }
     
     i = 1
@@ -74,6 +75,14 @@ def parse_enhanced_args():
             args['triage_mode'] = True
             args['mode'] = 'triage'
             i += 1
+        elif sys.argv[i] == '--llm-framework' and i + 1 < len(sys.argv):
+            framework = sys.argv[i + 1].lower()
+            if framework in ['beeai', 'granite-io', 'granite_io']:
+                args['framework'] = 'granite-io' if framework in ['granite-io', 'granite_io'] else 'beeai'
+            else:
+                print(f"Error: Invalid LLM framework '{framework}'. Use 'beeai' or 'granite-io'")
+                sys.exit(1)
+            i += 2
         elif sys.argv[i] in ['--help', '-h']:
             print_usage()
             sys.exit(0)
@@ -117,8 +126,13 @@ OPTIONS:
   --scan-system       Automatically scan system logs for recent errors
   --hours N           Hours back to scan for errors (default: 24)
   --triage           Run in triage mode for live outages
+  --llm-framework NAME    LLM framework: 'granite-io' for enhanced processing (default: beeai)
   --help, -h          Show this help message
   --license, -l       Show license information
+
+LLM FRAMEWORKS:
+  beeai              Use BeeAI platform (default, requires ollama:granite3.3:8b-beeai)
+  granite-io         Use Granite-IO processing (enhanced, requires granite3.2:8b)
 
 SUPPORTED ERROR TYPES:
   - Linux kernel errors and panics
@@ -138,6 +152,7 @@ FEATURES:
   - Resource usage tracking
   - Log bundling and analysis
   - Lessons learned tracking
+  - Enhanced LLM processing with dual framework support
 """)
 
 def main():
@@ -149,6 +164,7 @@ def main():
         
         print("=== Enhanced System Diagnostic RCA Report ===")
         print(f"Mode: {args['mode'].upper()}")
+        print(f"LLM Framework: {args['framework'].upper()}")
         if args['triage_mode']:
             print("TRIAGE MODE ENABLED - Live outage in progress")
         print(f"Timestamp: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
@@ -159,7 +175,8 @@ def main():
             args['logfile'], 
             args['scan_system'], 
             args['hours_back'],
-            args['triage_mode']
+            args['triage_mode'],
+            args['framework']
         ))
         
         formatted_analysis = format_output(analysis)
@@ -170,6 +187,7 @@ def main():
         print("- Running with --scan-system to check broader system logs")
         print("- Increasing --hours value to scan further back in time")
         print("- Using --triage mode for live outage situations")
+        print("- Trying --llm-framework granite-io for enhanced processing")
         print("- Checking specific service logs in /var/log/")
         print("- Reviewing security logs if SELinux or permission issues persist")
         print("- Monitoring container health if analyzing container issues")
@@ -181,11 +199,17 @@ def main():
         print(f"An error occurred during analysis: {e}")
         print("\nFor troubleshooting:")
         print("1. Verify log file permissions and paths")
-        print("2. Check if BeeAI framework and Ollama are properly configured")
-        print("3. Ensure granite3.3:8b-beeai model is available")
-        print("4. Check container runtime status if analyzing container issues")
-        print("5. Install Docling for enhanced document parsing: pip install docling")
-        print("6. For offline Docling usage, set DOCLING_ARTIFACTS_PATH environment variable")
+        if 'framework' in locals() and args.get('framework') == 'granite-io':
+            print("2. Check if Granite-IO processing and Ollama are properly configured")
+            print("3. Ensure granite3.2:8b model is available (ollama pull granite3.2:8b)")
+            print("4. Install Granite-IO: pip install granite-io")
+        else:
+            print("2. Check if BeeAI platform and Ollama are properly configured")
+            print("3. Ensure granite3.3:8b-beeai model is available")
+        print("5. Check container runtime status if analyzing container issues")
+        print("6. Install Docling for enhanced document parsing: pip install docling")
+        print("7. For offline Docling usage, set DOCLING_ARTIFACTS_PATH environment variable")
+        print("8. Try switching frameworks with --llm-framework granite-io or --llm-framework beeai")
         sys.exit(1)
 
 if __name__ == '__main__':

@@ -1,6 +1,7 @@
 # SPDX-License-Identifier: Apache-2.0
 # Core dependencies
-beeai-framework>=0.1.0  # Framework for AI model interaction
+beeai-framework>=0.1.0  # Primary LLM framework with integrated platform
+granite-io>=0.5.1       # Optional enhanced IO processing framework
 tqdm>=4.65.0           # Progress bar functionality
 python-dateutil>=2.8.2
 psutil>=5.9.0  # For resource monitoring
